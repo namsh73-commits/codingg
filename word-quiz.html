@@ -3,39 +3,2088 @@
 <head>
 <meta charset="UTF-8">
 <script>
-  // ================================================================
-  //  📚 단어 목록 — 여기만 고치면 됩니다!
-  //  형식: ["영어 단어", "한국어 뜻"],
-  //  · 10개 이상 넣어 주세요. (많을수록 매번 다른 문제가 나와요)
-  //  · 오답 보기는 다른 단어들의 뜻에서 자동으로 골라요.
-  // ================================================================
-  const WORDS = [
-    ["apple", "사과"],
-    ["library", "도서관"],
-    ["borrow", "빌리다"],
-    ["weather", "날씨"],
-    ["important", "중요한"],
-    ["remember", "기억하다"],
-    ["dangerous", "위험한"],
-    ["neighbor", "이웃"],
-    ["arrive", "도착하다"],
-    ["festival", "축제"],
-    ["healthy", "건강한"],
-    ["choose", "고르다"],
-    ["environment", "환경"],
-    ["invite", "초대하다"],
-    ["quiet", "조용한"],
-    ["practice", "연습하다"],
-    ["season", "계절"],
-    ["worry", "걱정하다"],
-    ["brave", "용감한"],
-    ["history", "역사"],
-  ];
-
-  const QUESTION_COUNT = 10; // 문제 수
+// =====================================================================
+//  📚 단어 목록 — 여기만 고치면 됩니다!
+//
+//  한 줄에 단어 하나:  영어 | 뜻 | 학년(1~3) | 예문 | 예문 해석
+//
+//  · 예문에서 연습할 단어를 [대괄호]로 감싸 주세요.
+//      예) borrow | 빌리다 | 1 | Can I [borrow] your pen? | 펜 좀 빌려도 될까?
+//    (borrowed 처럼 모양이 바뀐 단어도 [borrowed] 로 감싸면 돼요)
+//  · 예문과 해석은 없어도 돼요. 없으면 '뜻 고르기' 문제로만 나와요.
+//  · 줄을 지우거나 새로 넣으면 바로 반영돼요. # 으로 시작하는 줄은 무시해요.
+//  · 같은 영어 단어가 두 번 있으면 먼저 나온 것만 써요.
+// =====================================================================
+const WORD_DATA = `
+abandon|버리다, 포기하다|3|They had to [abandon] the car in the snow.|그들은 눈 속에 차를 버려야 했다.
+ability|능력|2|She has the [ability] to speak three languages.|그녀는 세 가지 언어를 말하는 능력이 있다.
+able|~할 수 있는|1|I am [able] to swim now.|나는 이제 수영을 할 수 있다.
+abroad|해외로, 해외에|2|My uncle is studying [abroad].|우리 삼촌은 해외에서 공부하고 있다.
+absent|결석한|2|Tom was [absent] from school yesterday.|Tom은 어제 학교에 결석했다.
+absolutely|절대적으로, 완전히|3|You are [absolutely] right.|네 말이 전적으로 옳아.
+accent|억양, 말씨|3|He speaks English with a British [accent].|그는 영국식 억양으로 영어를 말한다.
+accept|받아들이다|2|Please [accept] my apology.|내 사과를 받아 줘.
+access|접근, 이용|3|Students have [access] to the library computers.|학생들은 도서관 컴퓨터를 이용할 수 있다.
+accident|사고|1|He hurt his leg in a car [accident].|그는 자동차 사고로 다리를 다쳤다.
+achieve|이루다, 성취하다|3|Work hard and you will [achieve] your goal.|열심히 하면 너는 목표를 이룰 것이다.
+achievement|업적, 성취|3|Winning the prize was a great [achievement].|그 상을 받은 것은 대단한 성취였다.
+across|가로질러, 건너편에|1|We walked [across] the street.|우리는 길을 가로질러 걸었다.
+act|행동하다, 연기하다|1|You should [act] like a leader.|너는 리더처럼 행동해야 한다.
+action|행동|2|Now is the time for [action].|지금은 행동할 때이다.
+active|활동적인|2|My grandmother is still very [active].|우리 할머니는 아직도 매우 활동적이시다.
+activity|활동|2|Hiking is my favorite outdoor [activity].|하이킹은 내가 가장 좋아하는 야외 활동이다.
+actor|배우|1|The [actor] became famous after the movie.|그 배우는 그 영화 이후 유명해졌다.
+actually|사실은, 실제로|2|I [actually] like vegetables.|나는 사실 채소를 좋아한다.
+add|더하다|1|[Add] some sugar to the tea.|차에 설탕을 좀 넣어라.
+add up|합산하다|3|[Add up] all the numbers.|모든 숫자를 더해라.
+address|주소|1|What is your email [address]?|네 이메일 주소가 뭐니?
+admire|존경하다, 감탄하다|3|I [admire] my father for his honesty.|나는 아버지의 정직함을 존경한다.
+admission|입장, 입학|3|[Admission] to the museum is free.|그 박물관은 입장료가 무료이다.
+admit|인정하다|3|He didn't want to [admit] his mistake.|그는 자신의 실수를 인정하고 싶지 않았다.
+adult|어른, 성인|2|Children must come with an [adult].|어린이는 어른과 함께 와야 한다.
+advance|발전, 전진하다|3|Book your tickets in [advance].|표를 미리 예매해라.
+advantage|장점, 유리한 점|3|Being tall is an [advantage] in basketball.|키가 큰 것은 농구에서 유리한 점이다.
+adventure|모험|2|The book is about a boy's [adventure] in the jungle.|그 책은 정글에서 한 소년의 모험에 관한 것이다.
+advertisement|광고|3|I saw an [advertisement] for a new phone.|나는 새 휴대폰 광고를 보았다.
+advice|조언, 충고|2|Thank you for your [advice].|조언해 줘서 고마워.
+advise|조언하다|3|The doctor [advised] me to get more sleep.|의사는 나에게 잠을 더 자라고 조언했다.
+affect|영향을 미치다|3|Lack of sleep can [affect] your grades.|수면 부족은 성적에 영향을 줄 수 있다.
+afford|~할 여유가 있다|3|We can't [afford] a new car.|우리는 새 차를 살 여유가 없다.
+afraid|두려워하는|1|My little sister is [afraid] of dogs.|내 여동생은 개를 무서워한다.
+after|~ 후에|1|Let's play soccer [after] school.|방과 후에 축구하자.
+afternoon|오후|1|I have a piano lesson this [afternoon].|나는 오늘 오후에 피아노 수업이 있다.
+again|다시|1|Can you say that [again]?|다시 말해 줄래?
+against|~에 반대하여, ~에 맞서|2|Our team played [against] a strong team.|우리 팀은 강한 팀과 맞서 경기했다.
+age|나이|1|At your [age], I was very shy.|네 나이 때 나는 아주 수줍음이 많았다.
+ago|~ 전에|1|I met him two years [ago].|나는 그를 2년 전에 만났다.
+agree|동의하다|1|I [agree] with you.|나는 너에게 동의해.
+agreement|동의, 합의|3|We came to an [agreement].|우리는 합의에 이르렀다.
+ahead|앞으로, 앞에|2|Go straight [ahead] and turn left.|앞으로 쭉 가서 왼쪽으로 도세요.
+aid|도움, 원조|3|They sent food [aid] to the village.|그들은 그 마을에 식량 원조를 보냈다.
+aim|목표, 목표로 하다|3|My [aim] is to read fifty books this year.|내 목표는 올해 책 50권을 읽는 것이다.
+air|공기|1|Let's go out and get some fresh [air].|밖에 나가서 신선한 공기를 좀 마시자.
+airplane|비행기|1|The [airplane] landed safely.|비행기가 안전하게 착륙했다.
+airport|공항|1|We arrived at the [airport] early.|우리는 공항에 일찍 도착했다.
+alarm|경보, 자명종|2|My [alarm] didn't ring this morning.|오늘 아침 내 알람이 울리지 않았다.
+album|앨범|1|She showed me her photo [album].|그녀는 나에게 사진 앨범을 보여 주었다.
+alien|외계인|2|The movie is about an [alien] from Mars.|그 영화는 화성에서 온 외계인에 관한 것이다.
+alike|비슷한|3|The twins look [alike].|그 쌍둥이는 비슷하게 생겼다.
+alive|살아 있는|2|The fish is still [alive].|그 물고기는 아직 살아 있다.
+alley|골목|3|The cat ran down the [alley].|고양이가 골목으로 달려갔다.
+allow|허락하다|2|My mom doesn't [allow] me to play games at night.|엄마는 내가 밤에 게임하는 것을 허락하지 않으신다.
+almost|거의|1|It's [almost] time for lunch.|거의 점심시간이다.
+alone|혼자|1|He lives [alone] in a small house.|그는 작은 집에서 혼자 산다.
+along|~을 따라|1|We walked [along] the river.|우리는 강을 따라 걸었다.
+aloud|소리 내어|2|Please read the sentence [aloud].|그 문장을 소리 내어 읽어 주세요.
+alphabet|알파벳|1|There are 26 letters in the English [alphabet].|영어 알파벳에는 26개의 글자가 있다.
+already|이미, 벌써|1|I have [already] finished my homework.|나는 이미 숙제를 끝냈다.
+also|또한|1|She can [also] play the guitar.|그녀는 기타도 칠 수 있다.
+although|비록 ~이지만|2|[Although] it was raining, we went out.|비가 오고 있었지만 우리는 밖에 나갔다.
+always|항상|1|I [always] get up at seven.|나는 항상 7시에 일어난다.
+amazing|놀라운|1|The view from the mountain was [amazing].|산에서 본 경치는 놀라웠다.
+ambulance|구급차|2|Call an [ambulance], please!|구급차를 불러 주세요!
+among|~ 사이에|2|She is popular [among] her classmates.|그녀는 반 친구들 사이에서 인기가 많다.
+amount|양, 액수|3|Drink a large [amount] of water every day.|매일 많은 양의 물을 마셔라.
+amusement park|놀이공원|2|We went to an [amusement park] on Children's Day.|우리는 어린이날에 놀이공원에 갔다.
+ancestor|조상|3|Our [ancestors] built this temple.|우리 조상들이 이 절을 지었다.
+ancient|고대의|3|We learned about [ancient] Greece.|우리는 고대 그리스에 대해 배웠다.
+anger|분노, 화|3|He couldn't hide his [anger].|그는 화를 감출 수 없었다.
+angry|화난|1|Why are you so [angry]?|왜 그렇게 화가 났니?
+animal|동물|1|My favorite [animal] is the panda.|내가 가장 좋아하는 동물은 판다이다.
+ankle|발목|2|I twisted my [ankle] while running.|나는 달리다가 발목을 삐었다.
+anniversary|기념일|3|Today is my parents' wedding [anniversary].|오늘은 부모님의 결혼기념일이다.
+announce|발표하다|3|The teacher will [announce] the winner tomorrow.|선생님께서 내일 우승자를 발표하실 것이다.
+annoy|짜증 나게 하다|3|Loud music [annoys] my neighbors.|시끄러운 음악은 이웃들을 짜증 나게 한다.
+another|또 하나의, 다른|1|Can I have [another] cookie?|쿠키 하나 더 먹어도 돼요?
+answer|대답, 대답하다|1|Please [answer] the question.|질문에 대답해 주세요.
+ant|개미|1|An [ant] can carry heavy things.|개미는 무거운 것을 나를 수 있다.
+anxious|걱정하는, 불안한|3|She was [anxious] about the test.|그녀는 시험 때문에 불안해했다.
+anymore|더 이상|2|I don't play that game [anymore].|나는 더 이상 그 게임을 하지 않는다.
+anyone|누구든지, 아무나|1|Does [anyone] have a pencil?|누구 연필 가진 사람 있니?
+anything|무엇이든, 아무것도|1|Do you need [anything] else?|다른 거 필요한 거 있니?
+anyway|어쨌든|2|It was cold, but we went swimming [anyway].|추웠지만 우리는 어쨌든 수영하러 갔다.
+anywhere|어디든지, 아무 데도|2|You can sit [anywhere] you like.|원하는 곳 어디든지 앉아도 된다.
+apart|떨어져|3|The two towns are 10 km [apart].|두 마을은 10킬로미터 떨어져 있다.
+apartment|아파트|1|We live in an [apartment] on the tenth floor.|우리는 10층 아파트에 산다.
+apologize|사과하다|2|I [apologize] for being late.|늦어서 죄송합니다.
+appear|나타나다|2|A rainbow [appeared] after the rain.|비가 온 뒤에 무지개가 나타났다.
+appearance|외모, 출현|3|Don't judge people by their [appearance].|사람을 외모로 판단하지 마라.
+apple|사과|1|I eat an [apple] every morning.|나는 매일 아침 사과를 먹는다.
+appointment|약속, 예약|3|I have a dentist [appointment] at three.|나는 3시에 치과 예약이 있다.
+appreciate|감사하다, 진가를 알다|3|I really [appreciate] your help.|도와주셔서 정말 감사합니다.
+approach|다가가다, 접근법|3|A big dog [approached] us slowly.|큰 개 한 마리가 우리에게 천천히 다가왔다.
+aquarium|수족관|2|We saw sharks at the [aquarium].|우리는 수족관에서 상어를 보았다.
+area|지역, 구역|2|This [area] is famous for apples.|이 지역은 사과로 유명하다.
+argue|다투다, 주장하다|2|My brother and I often [argue] about small things.|형과 나는 사소한 일로 자주 다툰다.
+argument|논쟁, 말다툼|3|They had an [argument] about money.|그들은 돈 문제로 말다툼을 했다.
+arm|팔|1|He broke his [arm] playing basketball.|그는 농구를 하다가 팔이 부러졌다.
+army|군대|2|My cousin joined the [army] last year.|내 사촌은 작년에 군대에 갔다.
+around|주위에, 약|1|There are many trees [around] the house.|집 주위에 나무가 많다.
+arrange|정리하다, 준비하다|3|She [arranged] the flowers in a vase.|그녀는 꽃병에 꽃을 꽂아 정리했다.
+arrest|체포하다|3|The police [arrested] the thief.|경찰이 도둑을 체포했다.
+arrive|도착하다|1|The train will [arrive] at noon.|기차는 정오에 도착할 것이다.
+arrow|화살, 화살표|2|Follow the [arrow] to find the exit.|출구를 찾으려면 화살표를 따라가세요.
+art|미술, 예술|1|I love [art] class.|나는 미술 시간을 아주 좋아한다.
+article|기사, 글|3|I read an interesting [article] in the newspaper.|나는 신문에서 흥미로운 기사를 읽었다.
+artificial|인공의|3|This drink has no [artificial] colors.|이 음료에는 인공 색소가 없다.
+artist|예술가, 화가|1|Van Gogh is my favorite [artist].|반 고흐는 내가 가장 좋아하는 화가이다.
+ashamed|부끄러운|3|He was [ashamed] of his lie.|그는 자신의 거짓말이 부끄러웠다.
+ask|묻다, 부탁하다|1|Can I [ask] you a question?|질문 하나 해도 될까요?
+asleep|잠든|2|The baby is fast [asleep].|아기가 깊이 잠들어 있다.
+assignment|과제|3|I have a writing [assignment] due Monday.|나는 월요일까지 내야 하는 글쓰기 과제가 있다.
+assistant|조수, 보조원|3|She works as a shop [assistant].|그녀는 가게 점원으로 일한다.
+astronaut|우주 비행사|2|I want to be an [astronaut] someday.|나는 언젠가 우주 비행사가 되고 싶다.
+athlete|운동선수|3|He is a famous [athlete].|그는 유명한 운동선수이다.
+atmosphere|분위기, 대기|3|The restaurant has a warm [atmosphere].|그 식당은 따뜻한 분위기이다.
+attach|붙이다, 첨부하다|3|Please [attach] a photo to the form.|서류에 사진을 붙여 주세요.
+attack|공격하다, 공격|2|The dog [attacked] the cat.|그 개가 고양이를 공격했다.
+attend|참석하다, 다니다|3|All students must [attend] the meeting.|모든 학생은 그 모임에 참석해야 한다.
+attention|주의, 관심|2|Please pay [attention] to the teacher.|선생님 말씀에 주의를 기울이세요.
+attitude|태도|3|She always has a positive [attitude].|그녀는 항상 긍정적인 태도를 가지고 있다.
+attract|끌어들이다, 마음을 끌다|3|The festival [attracts] many tourists.|그 축제는 많은 관광객을 끌어모은다.
+attractive|매력적인|3|This is an [attractive] offer.|이것은 매력적인 제안이다.
+audience|청중, 관객|3|The [audience] clapped loudly.|관객들이 크게 박수를 쳤다.
+aunt|이모, 고모|1|My [aunt] lives in Busan.|우리 이모는 부산에 사신다.
+author|작가, 저자|2|Who is the [author] of this book?|이 책의 작가는 누구니?
+autumn|가을|1|Leaves turn red in [autumn].|가을에는 나뭇잎이 빨갛게 변한다.
+available|이용 가능한|3|Is this seat [available]?|이 자리 비어 있나요?
+average|평균, 평균의|3|My [average] score went up this term.|이번 학기에 내 평균 점수가 올랐다.
+avoid|피하다|2|Try to [avoid] eating too much sugar.|설탕을 너무 많이 먹는 것을 피하도록 해라.
+awake|깨어 있는|2|I was [awake] all night.|나는 밤새 깨어 있었다.
+award|상, 수여하다|2|She won an [award] for her painting.|그녀는 그림으로 상을 받았다.
+aware|알고 있는|3|Are you [aware] of the danger?|너는 그 위험을 알고 있니?
+away|떨어져, 멀리|1|The beach is two kilometers [away].|해변은 2킬로미터 떨어져 있다.
+awesome|굉장한, 멋진|1|That concert was [awesome]!|그 콘서트는 정말 멋졌어!
+awful|끔찍한|2|The weather was [awful] yesterday.|어제 날씨는 끔찍했다.
+baby|아기|1|The [baby] is sleeping.|아기가 자고 있다.
+back|뒤, 등, 뒤로|1|Please come [back] soon.|곧 돌아와 주세요.
+background|배경|3|I like the blue [background] of this picture.|나는 이 그림의 파란 배경이 좋다.
+backpack|배낭, 책가방|1|I put my books in my [backpack].|나는 책을 책가방에 넣었다.
+backward|뒤로|3|Take two steps [backward].|뒤로 두 걸음 물러나라.
+bad|나쁜|1|Eating too much candy is [bad] for your teeth.|사탕을 너무 많이 먹는 것은 이에 나쁘다.
+badly|나쁘게, 심하게|2|He was [badly] hurt in the game.|그는 경기에서 심하게 다쳤다.
+bag|가방|1|This [bag] is too heavy.|이 가방은 너무 무겁다.
+bake|굽다|1|My mom [bakes] bread on Sundays.|엄마는 일요일마다 빵을 구우신다.
+bake sale|빵 바자회|3|We raised money with a [bake sale].|우리는 빵 바자회로 돈을 모았다.
+bakery|빵집|2|There is a new [bakery] near my school.|우리 학교 근처에 새 빵집이 있다.
+balance|균형|3|It is hard to keep your [balance] on ice.|얼음 위에서 균형을 잡는 것은 어렵다.
+ball|공|1|Throw the [ball] to me.|공을 나에게 던져.
+balloon|풍선|1|The child let go of the [balloon].|그 아이는 풍선을 놓쳐 버렸다.
+bamboo|대나무|2|Pandas eat [bamboo].|판다는 대나무를 먹는다.
+banana|바나나|1|Monkeys like [bananas].|원숭이는 바나나를 좋아한다.
+band|밴드, 악단|1|My brother plays the drums in a [band].|우리 형은 밴드에서 드럼을 친다.
+bank|은행, 둑|1|I need to go to the [bank].|나는 은행에 가야 한다.
+bark|짖다|2|My dog [barks] at strangers.|우리 개는 낯선 사람에게 짖는다.
+base|기초, 기반|3|The lamp has a heavy [base].|그 램프는 무거운 받침이 있다.
+baseball|야구|1|Let's play [baseball] after school.|방과 후에 야구하자.
+basic|기본적인|2|You need to learn the [basic] rules first.|너는 먼저 기본 규칙을 배워야 한다.
+basket|바구니|1|She put the apples in a [basket].|그녀는 사과를 바구니에 담았다.
+basketball|농구|1|He is good at [basketball].|그는 농구를 잘한다.
+bat|박쥐; 방망이|2|[Bats] sleep during the day.|박쥐는 낮에 잠을 잔다.
+bath|목욕|1|I take a [bath] every night.|나는 매일 밤 목욕을 한다.
+bathroom|욕실, 화장실|1|Where is the [bathroom]?|화장실이 어디예요?
+battery|배터리, 건전지|2|My phone [battery] is almost dead.|내 휴대폰 배터리가 거의 다 됐다.
+battle|전투|3|Many soldiers died in the [battle].|그 전투에서 많은 군인들이 죽었다.
+beach|해변|1|We played on the [beach] all day.|우리는 하루 종일 해변에서 놀았다.
+bean|콩|2|I don't like [beans] in my rice.|나는 밥에 들어간 콩을 좋아하지 않는다.
+bear|곰; 참다|1|A [bear] was sleeping in the cave.|곰 한 마리가 동굴에서 자고 있었다.
+beard|턱수염|3|My grandfather has a white [beard].|우리 할아버지는 하얀 턱수염이 있으시다.
+beat|이기다, 두드리다|2|We [beat] the other team 3 to 1.|우리는 상대 팀을 3대 1로 이겼다.
+beautiful|아름다운|1|What a [beautiful] flower!|정말 아름다운 꽃이구나!
+beauty|아름다움|2|I was surprised by the [beauty] of the lake.|나는 그 호수의 아름다움에 놀랐다.
+because|~ 때문에|1|I stayed home [because] I was sick.|나는 아파서 집에 있었다.
+become|~이 되다|1|I want to [become] a doctor.|나는 의사가 되고 싶다.
+bedroom|침실|1|My [bedroom] is small but cozy.|내 침실은 작지만 아늑하다.
+bedtime|잘 시간|2|It's past your [bedtime].|잘 시간이 지났어.
+bee|벌|1|A [bee] is flying around the flowers.|벌 한 마리가 꽃 주위를 날고 있다.
+beef|소고기|2|I'd like a [beef] burger, please.|소고기 버거 하나 주세요.
+before|~ 전에|1|Wash your hands [before] dinner.|저녁 먹기 전에 손을 씻어라.
+beg|간청하다, 구걸하다|3|The dog [begged] for food.|그 개는 먹을 것을 달라고 졸랐다.
+begin|시작하다|1|The class will [begin] at nine.|수업은 9시에 시작할 것이다.
+beginner|초보자|2|This book is for [beginners].|이 책은 초보자를 위한 것이다.
+beginning|시작, 처음|2|I didn't like the movie at the [beginning].|나는 처음에는 그 영화가 좋지 않았다.
+behave|행동하다, 예의 바르게 굴다|3|Please [behave] yourself in the library.|도서관에서는 예의 바르게 행동하세요.
+behavior|행동|3|His [behavior] in class has improved.|수업 중 그의 행동이 좋아졌다.
+behind|~ 뒤에|1|The cat is hiding [behind] the sofa.|고양이가 소파 뒤에 숨어 있다.
+believe|믿다|1|I can't [believe] it!|믿을 수가 없어!
+bell|종, 벨|1|The school [bell] rang.|학교 종이 울렸다.
+belong|~에 속하다, ~의 것이다|3|This bag [belongs] to me.|이 가방은 내 것이다.
+below|~ 아래에|2|Write your name [below] the line.|선 아래에 이름을 쓰세요.
+belt|벨트, 허리띠|2|Fasten your seat [belt].|안전벨트를 매세요.
+bench|벤치, 긴 의자|2|An old man is sitting on the [bench].|한 노인이 벤치에 앉아 있다.
+bend|구부리다|3|[Bend] your knees slowly.|무릎을 천천히 구부리세요.
+benefit|이익, 혜택|3|Exercise has many [benefits].|운동은 많은 이점이 있다.
+beside|~ 옆에|2|Come and sit [beside] me.|와서 내 옆에 앉아.
+best|최고의, 가장 좋은|1|She is my [best] friend.|그녀는 나의 가장 친한 친구이다.
+better|더 좋은, 더 잘|1|I feel [better] today.|나는 오늘 몸이 좀 나아.
+between|~ 사이에|1|The bank is [between] the school and the park.|은행은 학교와 공원 사이에 있다.
+beyond|~ 너머에|3|There is a village [beyond] the hill.|언덕 너머에 마을이 하나 있다.
+bicycle|자전거|1|I ride my [bicycle] to school.|나는 자전거를 타고 학교에 간다.
+big|큰|1|An elephant is a [big] animal.|코끼리는 큰 동물이다.
+bill|계산서, 지폐|2|Can I have the [bill], please?|계산서 좀 주시겠어요?
+billion|10억|3|There are about eight [billion] people in the world.|세계에는 약 80억 명의 사람이 있다.
+biology|생물학|3|I am interested in [biology].|나는 생물학에 관심이 있다.
+bird|새|1|A [bird] is singing in the tree.|새 한 마리가 나무에서 노래하고 있다.
+birth|탄생, 출생|2|What is your date of [birth]?|당신의 생년월일은 언제입니까?
+birthday|생일|1|Happy [birthday] to you!|생일 축하해!
+bite|물다, 한 입|2|Be careful. The dog may [bite] you.|조심해. 그 개가 너를 물지도 몰라.
+bitter|(맛이) 쓴|2|This medicine tastes [bitter].|이 약은 맛이 쓰다.
+blank|빈칸, 빈|2|Fill in the [blank] with the right word.|알맞은 단어로 빈칸을 채우세요.
+blanket|담요|2|It's cold. I need another [blanket].|추워. 담요가 하나 더 필요해.
+blind|눈이 먼|3|The [blind] man walked with a guide dog.|그 시각 장애인은 안내견과 함께 걸었다.
+block|막다, 블록, 구역|2|The library is two [blocks] away.|도서관은 두 블록 떨어져 있다.
+blood|피|2|He gave [blood] at the hospital.|그는 병원에서 헌혈을 했다.
+bloom|꽃이 피다|3|Cherry blossoms [bloom] in April.|벚꽃은 4월에 핀다.
+blossom|꽃|3|The cherry [blossoms] are beautiful.|벚꽃이 아름답다.
+blow|불다|2|[Blow] out the candles!|촛불을 불어서 꺼!
+board|판, 게시판; 타다|2|The teacher wrote the answer on the [board].|선생님께서 칠판에 답을 쓰셨다.
+board game|보드게임|2|We played a [board game] with our family.|우리는 가족과 보드게임을 했다.
+boat|배, 보트|1|We crossed the river by [boat].|우리는 배를 타고 강을 건넜다.
+body|몸, 신체|1|Exercise is good for your [body].|운동은 몸에 좋다.
+boil|끓다, 끓이다|2|[Boil] the water before you drink it.|물을 마시기 전에 끓여라.
+bomb|폭탄|3|The [bomb] destroyed the bridge.|폭탄이 다리를 파괴했다.
+bone|뼈|2|The dog is chewing a [bone].|개가 뼈를 씹고 있다.
+book|책; 예약하다|1|I borrowed a [book] from the library.|나는 도서관에서 책을 한 권 빌렸다.
+bookstore|서점|1|Let's meet at the [bookstore].|서점에서 만나자.
+boot|부츠, 장화|2|Wear your rain [boots] today.|오늘은 장화를 신어라.
+bored|지루해하는|1|I was [bored] during the long movie.|나는 그 긴 영화를 보는 동안 지루했다.
+boring|지루한|1|The lecture was so [boring].|그 강의는 너무 지루했다.
+born|태어난|1|I was [born] in 2012.|나는 2012년에 태어났다.
+borrow|빌리다|1|Can I [borrow] your pen?|펜 좀 빌려도 될까?
+boss|상사, 사장|2|My dad's [boss] is very kind.|우리 아빠의 상사는 아주 친절하시다.
+both|둘 다|1|[Both] of my parents are teachers.|우리 부모님은 두 분 다 선생님이시다.
+bother|귀찮게 하다|3|Sorry to [bother] you, but can you help me?|귀찮게 해서 미안하지만 좀 도와줄래?
+bottle|병|1|I bought a [bottle] of water.|나는 물 한 병을 샀다.
+bottom|맨 아래, 바닥|2|The coin is at the [bottom] of the pool.|동전이 수영장 바닥에 있다.
+bow|절하다, 활|3|Koreans [bow] when they say hello.|한국인은 인사할 때 절을 한다.
+bowl|그릇, 사발|1|I had a [bowl] of rice.|나는 밥 한 그릇을 먹었다.
+box|상자|1|What's in the [box]?|상자 안에 뭐가 있니?
+boyfriend|남자 친구|2|Her [boyfriend] is very tall.|그녀의 남자 친구는 키가 아주 크다.
+bracelet|팔찌|3|She wore a silver [bracelet].|그녀는 은팔찌를 하고 있었다.
+brain|뇌|2|Reading is good for your [brain].|독서는 뇌에 좋다.
+branch|나뭇가지, 지점|3|A bird is sitting on a [branch].|새 한 마리가 나뭇가지에 앉아 있다.
+brand|상표, 브랜드|2|What [brand] are your shoes?|네 신발은 어느 브랜드니?
+brave|용감한|1|The [brave] firefighter saved the child.|용감한 소방관이 그 아이를 구했다.
+bread|빵|1|I had [bread] and milk for breakfast.|나는 아침으로 빵과 우유를 먹었다.
+break|깨다, 부수다; 휴식|1|Be careful not to [break] the glass.|유리잔을 깨지 않도록 조심해.
+breakfast|아침 식사|1|What did you have for [breakfast]?|아침으로 뭐 먹었니?
+breath|숨, 호흡|3|Take a deep [breath].|숨을 깊이 들이쉬어라.
+breathe|숨 쉬다|3|Fish [breathe] through their gills.|물고기는 아가미로 숨을 쉰다.
+brick|벽돌|3|The house is made of red [bricks].|그 집은 빨간 벽돌로 지어졌다.
+bride|신부|3|The [bride] wore a white dress.|신부는 흰 드레스를 입었다.
+bridge|다리|1|We walked across the [bridge].|우리는 다리를 건너 걸었다.
+brief|짧은, 간단한|3|Please give a [brief] answer.|간단히 대답해 주세요.
+bright|밝은, 똑똑한|2|The sun is very [bright] today.|오늘은 햇빛이 매우 밝다.
+brilliant|훌륭한, 눈부신|3|What a [brilliant] idea!|정말 훌륭한 생각이다!
+bring|가져오다|1|Don't forget to [bring] your lunch.|점심 가져오는 것 잊지 마.
+broadcast|방송하다, 방송|3|The game will be [broadcast] live.|그 경기는 생방송으로 방송될 것이다.
+brother|형, 오빠, 남동생|1|My [brother] is two years older than me.|우리 형은 나보다 두 살 많다.
+brush|솔, 붓; 솔질하다|1|[Brush] your teeth after meals.|식사 후에 이를 닦아라.
+bubble|거품, 비누 방울|2|The kids are blowing [bubbles].|아이들이 비누 방울을 불고 있다.
+bug|벌레|1|There is a [bug] on your shirt.|네 셔츠에 벌레가 있어.
+build|짓다, 세우다|1|They are going to [build] a new library.|그들은 새 도서관을 지을 것이다.
+building|건물|1|That tall [building] is a hotel.|저 높은 건물은 호텔이다.
+bulletin board|게시판|3|Check the [bulletin board] for news.|소식이 있는지 게시판을 확인해라.
+bully|괴롭히다; 괴롭히는 사람|3|Never [bully] other students.|절대 다른 학생을 괴롭히지 마라.
+burn|타다, 태우다|2|Don't [burn] your hand on the stove.|가스레인지에 손을 데지 않게 해.
+burst|터지다|3|The balloon [burst] with a loud bang.|풍선이 큰 소리를 내며 터졌다.
+bury|묻다, 매장하다|3|The dog [buried] a bone in the garden.|개가 정원에 뼈를 묻었다.
+bus|버스|1|I take the [bus] to school.|나는 버스를 타고 학교에 간다.
+business|사업, 일|2|My father runs a small [business].|우리 아버지는 작은 사업을 운영하신다.
+busy|바쁜|1|I am very [busy] today.|나는 오늘 무척 바쁘다.
+but|그러나|1|I like dogs, [but] my sister likes cats.|나는 개를 좋아하지만 내 여동생은 고양이를 좋아한다.
+butterfly|나비|1|A [butterfly] landed on the flower.|나비 한 마리가 꽃에 앉았다.
+button|단추, 버튼|2|Press the red [button] to start.|시작하려면 빨간 버튼을 누르세요.
+buy|사다|1|I want to [buy] a new bike.|나는 새 자전거를 사고 싶다.
+cabbage|양배추|2|Kimchi is usually made with Chinese [cabbage].|김치는 보통 배추로 만든다.
+cafe|카페|1|Let's meet at the [cafe].|카페에서 만나자.
+cafeteria|구내식당|2|We eat lunch in the school [cafeteria].|우리는 학교 식당에서 점심을 먹는다.
+cage|새장, 우리|2|The bird escaped from its [cage].|새가 새장에서 탈출했다.
+calendar|달력|1|Mark the date on the [calendar].|달력에 그 날짜를 표시해 둬.
+call|부르다, 전화하다|1|I will [call] you tonight.|오늘 밤에 전화할게.
+calm|침착한, 고요한|2|Stay [calm] and listen to me.|침착하게 내 말을 들어.
+calorie|칼로리, 열량|3|This snack is high in [calories].|이 과자는 열량이 높다.
+camera|카메라|1|I took pictures with my new [camera].|나는 새 카메라로 사진을 찍었다.
+camp|캠프, 야영하다|1|We [camped] by the lake.|우리는 호숫가에서 야영했다.
+campaign|캠페인, 운동|3|The school started a [campaign] to save water.|학교는 물을 아끼자는 캠페인을 시작했다.
+can|~할 수 있다; 깡통|1|[Can] you help me?|나 좀 도와줄 수 있니?
+cancel|취소하다|2|They [canceled] the game because of rain.|그들은 비 때문에 경기를 취소했다.
+cancer|암|3|Smoking can cause [cancer].|흡연은 암을 일으킬 수 있다.
+candle|양초|2|She lit a [candle] in the dark room.|그녀는 어두운 방에 촛불을 켰다.
+candy|사탕|1|Don't eat too much [candy].|사탕을 너무 많이 먹지 마.
+cap|모자|1|He is wearing a blue [cap].|그는 파란 모자를 쓰고 있다.
+capital|수도; 대문자|2|Seoul is the [capital] of Korea.|서울은 한국의 수도이다.
+captain|선장, 주장|2|He is the [captain] of our soccer team.|그는 우리 축구팀의 주장이다.
+capture|붙잡다, 포착하다|3|The photo [captured] her bright smile.|그 사진은 그녀의 밝은 미소를 담아냈다.
+car|자동차|1|My dad washes his [car] every Sunday.|아빠는 일요일마다 세차를 하신다.
+card|카드|1|I made a birthday [card] for my mom.|나는 엄마를 위해 생일 카드를 만들었다.
+care|돌봄, 관심; 신경 쓰다|2|Take [care] of yourself.|몸 조심해.
+career|직업, 경력|3|She wants a [career] in science.|그녀는 과학 분야의 직업을 원한다.
+careful|조심하는|1|Be [careful] when you cross the street.|길을 건널 때 조심해라.
+carefully|조심스럽게|2|Listen [carefully] to the question.|질문을 주의 깊게 들어라.
+carpet|카펫, 양탄자|2|The cat is sleeping on the [carpet].|고양이가 카펫 위에서 자고 있다.
+carrot|당근|1|Rabbits love [carrots].|토끼는 당근을 아주 좋아한다.
+carry|나르다, 들고 다니다|1|Can you help me [carry] this box?|이 상자 옮기는 것 좀 도와줄래?
+cartoon|만화|1|My brother likes watching [cartoons].|내 남동생은 만화 보는 것을 좋아한다.
+case|경우, 상자|2|In that [case], let's meet tomorrow.|그런 경우라면 내일 만나자.
+cash|현금|2|Do you want to pay in [cash]?|현금으로 계산하시겠어요?
+castle|성|2|The king lived in a big [castle].|왕은 큰 성에 살았다.
+cat|고양이|1|My [cat] likes to sleep in the sun.|우리 고양이는 햇볕 속에서 자는 것을 좋아한다.
+catch|잡다|1|[Catch] the ball!|공을 잡아!
+cause|원인; 일으키다|3|What was the [cause] of the fire?|그 화재의 원인은 무엇이었니?
+cave|동굴|2|Bats live in this [cave].|박쥐들이 이 동굴에 산다.
+ceiling|천장|3|There is a spider on the [ceiling].|천장에 거미가 있다.
+celebrate|축하하다, 기념하다|2|We [celebrated] my grandma's birthday.|우리는 할머니의 생신을 축하했다.
+cell|세포; 휴대 전화|3|Our bodies are made of [cells].|우리 몸은 세포로 이루어져 있다.
+center|중심, 센터|2|There is a fountain in the [center] of the park.|공원 중앙에 분수가 있다.
+century|세기, 100년|3|This house was built in the 19th [century].|이 집은 19세기에 지어졌다.
+ceremony|의식, 식|3|The graduation [ceremony] starts at ten.|졸업식은 10시에 시작한다.
+certain|확실한, 어떤|3|I'm [certain] that he will come.|나는 그가 올 거라고 확신한다.
+chain|사슬, 체인|3|The bike was locked with a [chain].|그 자전거는 체인으로 잠겨 있었다.
+chair|의자|1|Please sit on the [chair].|의자에 앉으세요.
+chalk|분필|2|The teacher wrote with [chalk].|선생님께서 분필로 쓰셨다.
+challenge|도전; 도전하다|2|Learning a new language is a [challenge].|새로운 언어를 배우는 것은 도전이다.
+champion|챔피언, 우승자|2|He became the world [champion].|그는 세계 챔피언이 되었다.
+chance|기회, 가능성|2|This is your last [chance].|이것이 너의 마지막 기회야.
+change|바꾸다, 변하다; 변화|1|I want to [change] my hairstyle.|나는 머리 모양을 바꾸고 싶다.
+channel|채널|2|Can you change the [channel]?|채널 좀 바꿔 줄래?
+character|성격, 등장인물|2|Who is your favorite [character] in the movie?|그 영화에서 가장 좋아하는 등장인물이 누구니?
+charge|요금; 충전하다|3|I need to [charge] my phone.|나는 휴대폰을 충전해야 한다.
+charity|자선, 자선 단체|3|She gave money to [charity].|그녀는 자선 단체에 돈을 기부했다.
+chat|수다 떨다, 채팅하다|2|We [chatted] for hours on the phone.|우리는 몇 시간 동안 전화로 수다를 떨었다.
+cheap|값이 싼|1|This shirt is very [cheap].|이 셔츠는 아주 싸다.
+cheat|속이다, 부정행위를 하다|3|Never [cheat] on a test.|절대 시험에서 부정행위를 하지 마라.
+check|확인하다, 점검하다|1|Please [check] your answers again.|답을 다시 확인하세요.
+cheek|뺨, 볼|2|The baby has pink [cheeks].|그 아기는 볼이 분홍색이다.
+cheer|환호하다, 응원하다|2|We [cheered] for our team.|우리는 우리 팀을 응원했다.
+cheerful|쾌활한, 명랑한|3|She is always [cheerful] and friendly.|그녀는 항상 명랑하고 친절하다.
+cheese|치즈|1|I love pizza with lots of [cheese].|나는 치즈가 많이 들어간 피자를 아주 좋아한다.
+chef|요리사|2|The [chef] made a delicious pasta.|요리사가 맛있는 파스타를 만들었다.
+chemical|화학의; 화학 물질|3|Some [chemicals] are dangerous to touch.|어떤 화학 물질은 만지면 위험하다.
+chess|체스|2|My grandfather taught me how to play [chess].|할아버지께서 나에게 체스 두는 법을 가르쳐 주셨다.
+chest|가슴|3|He felt a pain in his [chest].|그는 가슴에 통증을 느꼈다.
+chicken|닭, 닭고기|1|We had fried [chicken] for dinner.|우리는 저녁으로 프라이드치킨을 먹었다.
+child|아이, 어린이|1|Every [child] needs love.|모든 아이는 사랑이 필요하다.
+childhood|어린 시절|3|I spent my [childhood] in the country.|나는 어린 시절을 시골에서 보냈다.
+chimney|굴뚝|3|Smoke is coming out of the [chimney].|굴뚝에서 연기가 나오고 있다.
+chin|턱|3|He has a beard on his [chin].|그는 턱에 수염이 있다.
+choice|선택|2|You made the right [choice].|너는 올바른 선택을 했다.
+choose|고르다, 선택하다|1|You can [choose] any color you like.|원하는 색은 무엇이든 골라도 돼.
+chopsticks|젓가락|1|Can you eat with [chopsticks]?|너는 젓가락으로 먹을 수 있니?
+church|교회|2|They go to [church] on Sundays.|그들은 일요일마다 교회에 간다.
+circle|원, 동그라미|2|Draw a [circle] on the paper.|종이에 동그라미를 그려라.
+citizen|시민|3|Every [citizen] has the right to vote.|모든 시민은 투표할 권리가 있다.
+city|도시|1|Busan is a big [city].|부산은 큰 도시이다.
+claim|주장하다|3|He [claimed] that he saw a UFO.|그는 UFO를 봤다고 주장했다.
+clap|박수를 치다|2|Everyone [clapped] after the song.|노래가 끝나자 모두 박수를 쳤다.
+class|수업, 학급|1|Our English [class] starts at 10.|우리 영어 수업은 10시에 시작한다.
+classic|고전의, 일류의|3|I enjoy listening to [classic] rock music.|나는 고전 록 음악을 즐겨 듣는다.
+classmate|반 친구|1|Mina is my [classmate].|미나는 나의 반 친구이다.
+classroom|교실|1|Our [classroom] is on the third floor.|우리 교실은 3층에 있다.
+clean|깨끗한; 청소하다|1|Please [clean] your room.|네 방을 청소해라.
+clear|맑은, 분명한|2|The sky is [clear] today.|오늘은 하늘이 맑다.
+clerk|점원, 직원|3|The [clerk] helped me find the right size.|점원이 내가 맞는 사이즈를 찾도록 도와주었다.
+clever|영리한|2|The fox is a [clever] animal.|여우는 영리한 동물이다.
+click|클릭하다|2|[Click] the button to start the game.|게임을 시작하려면 버튼을 클릭하세요.
+climate|기후|3|The [climate] of Jeju is mild.|제주의 기후는 온화하다.
+climb|오르다|1|We [climbed] the mountain last weekend.|우리는 지난 주말에 산에 올랐다.
+clock|시계|1|The [clock] on the wall is slow.|벽에 걸린 시계가 느리다.
+close|닫다; 가까운|1|Please [close] the window.|창문을 닫아 주세요.
+closet|옷장, 벽장|2|Hang your coat in the [closet].|코트를 옷장에 걸어라.
+cloth|천, 옷감|3|She wiped the table with a wet [cloth].|그녀는 젖은 천으로 식탁을 닦았다.
+clothes|옷|1|I need some new [clothes].|나는 새 옷이 좀 필요하다.
+cloud|구름|1|There isn't a [cloud] in the sky.|하늘에 구름 한 점 없다.
+cloudy|흐린|1|It is [cloudy] today.|오늘은 날씨가 흐리다.
+club|동아리, 클럽|1|I joined the science [club].|나는 과학 동아리에 가입했다.
+clue|단서, 실마리|3|The police found an important [clue].|경찰이 중요한 단서를 발견했다.
+coach|코치, 감독|2|Our [coach] made us run every day.|우리 코치님은 우리를 매일 달리게 하셨다.
+coal|석탄|3|Many years ago, people used [coal] to heat their homes.|오래전에 사람들은 석탄으로 집을 데웠다.
+coast|해안|3|We drove along the east [coast].|우리는 동해안을 따라 차를 타고 갔다.
+coat|외투, 코트|1|Put on your [coat]. It's cold.|코트를 입어. 추워.
+code|암호, 규칙|3|You need a secret [code] to open the door.|그 문을 열려면 비밀 번호가 필요하다.
+coffee|커피|1|My parents drink [coffee] every morning.|부모님은 매일 아침 커피를 드신다.
+coin|동전|1|I found a [coin] on the street.|나는 길에서 동전을 하나 주웠다.
+cola|콜라|1|Too much [cola] is bad for your teeth.|콜라를 너무 많이 마시면 이에 나쁘다.
+cold|추운; 감기|1|I have a bad [cold].|나는 심한 감기에 걸렸다.
+collect|모으다, 수집하다|2|My hobby is to [collect] stamps.|내 취미는 우표를 모으는 것이다.
+collection|수집품, 모음|3|He has a large [collection] of comic books.|그는 만화책을 많이 수집했다.
+college|대학|2|My sister goes to [college] in Seoul.|우리 누나는 서울에 있는 대학에 다닌다.
+color|색, 색깔|1|What [color] do you like?|너는 무슨 색을 좋아하니?
+colorful|화려한, 다채로운|2|She wore a [colorful] dress.|그녀는 화려한 드레스를 입었다.
+comb|빗; 빗질하다|2|[Comb] your hair before you go out.|나가기 전에 머리를 빗어라.
+combine|결합하다|3|[Combine] the eggs and flour in a bowl.|그릇에 달걀과 밀가루를 섞어라.
+come|오다|1|Can you [come] to my party?|내 파티에 올 수 있니?
+comedy|코미디, 희극|2|We watched a [comedy] and laughed a lot.|우리는 코미디 영화를 보며 많이 웃었다.
+comfort|위로; 편안함|3|Her words gave me [comfort].|그녀의 말은 나에게 위로가 되었다.
+comfortable|편안한|2|These shoes are very [comfortable].|이 신발은 아주 편하다.
+comic|웃기는; 만화|2|I like reading [comic] books.|나는 만화책 읽는 것을 좋아한다.
+comment|논평, 댓글|3|Please leave a [comment] below.|아래에 댓글을 남겨 주세요.
+common|흔한, 공통의|2|Kim is a [common] family name in Korea.|김은 한국에서 흔한 성이다.
+communicate|의사소통하다|3|We [communicate] by email.|우리는 이메일로 연락을 주고받는다.
+communication|의사소통|3|Good [communication] is important in a team.|팀에서는 좋은 의사소통이 중요하다.
+community|지역 사회, 공동체|3|He volunteers at the [community] center.|그는 지역 문화 센터에서 봉사 활동을 한다.
+company|회사; 동료|2|My mom works for a computer [company].|엄마는 컴퓨터 회사에 다니신다.
+compare|비교하다|3|[Compare] your answers with your partner's.|네 답을 짝의 답과 비교해 봐라.
+compass|나침반|3|We used a [compass] to find north.|우리는 북쪽을 찾기 위해 나침반을 사용했다.
+compete|경쟁하다|3|Ten teams will [compete] in the contest.|열 팀이 대회에서 경쟁할 것이다.
+competition|경쟁, 대회|3|She won first prize in the [competition].|그녀는 그 대회에서 1등상을 받았다.
+complain|불평하다|3|He always [complains] about the food.|그는 항상 음식에 대해 불평한다.
+complete|완성하다; 완전한|3|[Complete] the sentences with the words in the box.|상자 안의 단어로 문장을 완성하세요.
+computer|컴퓨터|1|I use the [computer] to do my homework.|나는 숙제를 할 때 컴퓨터를 사용한다.
+concentrate|집중하다|3|I can't [concentrate] with all this noise.|이렇게 시끄러우면 집중할 수 없다.
+concern|걱정, 관심사|3|Your health is my main [concern].|너의 건강이 나의 가장 큰 걱정이다.
+concert|콘서트, 음악회|1|We went to a [concert] last night.|우리는 어젯밤 콘서트에 갔다.
+condition|상태, 조건|3|The car is in good [condition].|그 차는 상태가 좋다.
+confident|자신감 있는|3|She felt [confident] before the speech.|그녀는 연설 전에 자신감을 느꼈다.
+confuse|혼란스럽게 하다|3|The new rules [confused] the students.|새 규칙이 학생들을 혼란스럽게 했다.
+congratulate|축하하다|3|I [congratulated] him on winning the race.|나는 그가 경주에서 이긴 것을 축하했다.
+connect|연결하다|2|[Connect] the printer to the computer.|프린터를 컴퓨터에 연결해라.
+consider|고려하다, 여기다|3|Please [consider] my idea.|내 아이디어를 고려해 주세요.
+contact|연락하다; 접촉|3|Please [contact] me if you have questions.|질문이 있으면 저에게 연락 주세요.
+contain|포함하다, 담고 있다|3|This box [contains] old letters.|이 상자에는 오래된 편지들이 들어 있다.
+contest|대회, 시합|2|I entered a singing [contest].|나는 노래 대회에 참가했다.
+continue|계속하다|2|Please [continue] reading.|계속 읽으세요.
+contribute|기여하다|3|Everyone [contributed] to the project.|모두가 그 프로젝트에 기여했다.
+control|통제하다, 조절하다|3|Try to [control] your anger.|화를 조절하도록 노력해라.
+conversation|대화|2|We had a long [conversation] about the future.|우리는 미래에 대해 긴 대화를 나누었다.
+cook|요리하다; 요리사|1|My dad likes to [cook] on weekends.|우리 아빠는 주말에 요리하는 것을 좋아하신다.
+cookie|쿠키|1|Grandma baked [cookies] for us.|할머니께서 우리에게 쿠키를 구워 주셨다.
+cool|시원한, 멋진|1|It's [cool] in the shade.|그늘은 시원하다.
+cooperate|협력하다|3|We need to [cooperate] to win.|이기려면 우리는 협력해야 한다.
+copy|복사하다; 복사본|2|Can you [copy] this page for me?|이 페이지 좀 복사해 줄래?
+copy machine|복사기|3|The [copy machine] is broken.|복사기가 고장 났다.
+corn|옥수수|2|We grow [corn] in our garden.|우리는 텃밭에서 옥수수를 기른다.
+corner|모퉁이, 구석|1|Turn left at the [corner].|모퉁이에서 왼쪽으로 도세요.
+correct|올바른; 고치다|2|Your answer is [correct].|네 답이 맞다.
+cost|비용; (비용이) 들다|2|How much does this bag [cost]?|이 가방은 얼마예요?
+costume|의상, 복장|2|She wore a witch [costume] for Halloween.|그녀는 핼러윈에 마녀 의상을 입었다.
+cotton|면, 목화|3|This shirt is made of [cotton].|이 셔츠는 면으로 만들어졌다.
+cough|기침; 기침하다|2|I have a bad [cough].|나는 기침이 심하다.
+count|세다|1|Can you [count] to ten in English?|영어로 10까지 셀 수 있니?
+country|나라, 시골|1|Canada is a big [country].|캐나다는 큰 나라이다.
+couple|커플, 두 사람; 몇 개|2|I'll be back in a [couple] of days.|며칠 후에 돌아올게.
+courage|용기|3|It takes [courage] to say sorry.|미안하다고 말하는 데는 용기가 필요하다.
+course|과정, 강좌|2|I am taking a cooking [course].|나는 요리 강좌를 듣고 있다.
+court|법원; (테니스 등의) 코트|3|They played on the tennis [court].|그들은 테니스장에서 경기를 했다.
+cousin|사촌|1|My [cousin] lives in Daegu.|내 사촌은 대구에 산다.
+cover|덮다; 덮개, 표지|2|[Cover] your mouth when you cough.|기침할 때는 입을 가려라.
+cow|소, 암소|1|The farmer has ten [cows].|그 농부는 소 열 마리를 가지고 있다.
+crack|금, 갈라진 틈|3|There is a [crack] in the window.|창문에 금이 가 있다.
+craft|공예|3|We made paper flowers in [craft] class.|우리는 공예 시간에 종이꽃을 만들었다.
+crash|충돌하다; 충돌|3|The car [crashed] into a tree.|그 차가 나무에 충돌했다.
+crayon|크레용|1|The child drew a picture with [crayons].|그 아이는 크레용으로 그림을 그렸다.
+crazy|미친, 열광하는|2|He is [crazy] about soccer.|그는 축구에 푹 빠져 있다.
+cream|크림|1|I like ice [cream] with chocolate.|나는 초콜릿을 곁들인 아이스크림을 좋아한다.
+create|창조하다, 만들어 내다|2|Artists [create] beautiful things.|예술가들은 아름다운 것을 만들어 낸다.
+creative|창의적인|3|She is a [creative] writer.|그녀는 창의적인 작가이다.
+creature|생물, 동물|3|Sea turtles are amazing [creatures].|바다거북은 놀라운 생물이다.
+crime|범죄|3|The police are trying to stop [crime].|경찰은 범죄를 막으려고 노력하고 있다.
+crop|농작물|3|Rice is the main [crop] in Korea.|쌀은 한국의 주요 농작물이다.
+cross|건너다; 십자가|1|Look both ways before you [cross] the road.|길을 건너기 전에 양쪽을 살펴라.
+crosswalk|횡단보도|2|Always use the [crosswalk].|항상 횡단보도를 이용해라.
+crowd|군중, 사람들|2|A large [crowd] gathered in the square.|많은 사람들이 광장에 모였다.
+crowded|붐비는|2|The subway is always [crowded] in the morning.|지하철은 아침에 항상 붐빈다.
+cruel|잔인한|3|Don't be [cruel] to animals.|동물에게 잔인하게 대하지 마라.
+cry|울다; 외치다|1|The baby started to [cry].|아기가 울기 시작했다.
+cucumber|오이|2|I put [cucumber] in my sandwich.|나는 샌드위치에 오이를 넣었다.
+culture|문화|2|I'm interested in Korean [culture].|나는 한국 문화에 관심이 있다.
+cupboard|찬장|3|The cups are in the [cupboard].|컵은 찬장 안에 있다.
+cure|치료하다; 치료법|3|There is no [cure] for the common cold.|일반 감기에는 치료법이 없다.
+curious|호기심이 많은|3|Children are [curious] about everything.|아이들은 모든 것에 호기심이 많다.
+curtain|커튼|2|Open the [curtains], please.|커튼 좀 열어 주세요.
+custom|관습, 풍습|3|Bowing is a Korean [custom].|절하는 것은 한국의 풍습이다.
+customer|손님, 고객|2|The store has many [customers] on weekends.|그 가게는 주말에 손님이 많다.
+cut|자르다|1|[Cut] the paper in half.|종이를 반으로 잘라라.
+cute|귀여운|1|Your puppy is so [cute]!|네 강아지 정말 귀엽다!
+cycle|순환; 자전거를 타다|3|We learned about the water [cycle].|우리는 물의 순환에 대해 배웠다.
+dad|아빠|1|My [dad] is a good cook.|우리 아빠는 요리를 잘하신다.
+daily|매일의, 일상의|2|Exercise is part of my [daily] life.|운동은 내 일상생활의 일부이다.
+damage|손상, 피해; 손상시키다|3|The storm caused a lot of [damage].|폭풍이 많은 피해를 입혔다.
+dance|춤추다; 춤|1|Let's [dance] together!|같이 춤추자!
+danger|위험|2|The sign says "[Danger]! Keep out!"|표지판에 "위험! 출입 금지!"라고 쓰여 있다.
+dangerous|위험한|1|It's [dangerous] to swim here.|여기서 수영하는 것은 위험하다.
+dark|어두운|1|It's getting [dark] outside.|밖이 어두워지고 있다.
+data|자료, 데이터|3|We collected [data] for our science project.|우리는 과학 프로젝트를 위해 자료를 모았다.
+date|날짜; 데이트|1|What's the [date] today?|오늘이 며칠이니?
+daughter|딸|1|They have one son and two [daughters].|그들은 아들 하나와 딸 둘이 있다.
+dawn|새벽|3|We left home at [dawn].|우리는 새벽에 집을 나섰다.
+day|날, 하루|1|Have a nice [day]!|좋은 하루 보내!
+dead|죽은|2|The plant is [dead] because I forgot to water it.|내가 물 주는 것을 잊어서 그 식물이 죽었다.
+deaf|귀가 먼|3|He uses sign language because he is [deaf].|그는 청각 장애가 있어서 수화를 사용한다.
+deal|거래; 다루다|3|I'll make a [deal] with you.|너와 거래를 하나 하자.
+dear|사랑하는, ~에게(편지)|1|[Dear] Grandma, how are you?|사랑하는 할머니, 어떻게 지내세요?
+death|죽음|3|The [death] of his dog made him sad.|그는 개의 죽음 때문에 슬펐다.
+debate|토론; 토론하다|3|We had a [debate] about school uniforms.|우리는 교복에 대해 토론을 했다.
+decide|결정하다|2|I [decided] to join the art club.|나는 미술 동아리에 가입하기로 결정했다.
+decision|결정|3|It was a difficult [decision].|그것은 어려운 결정이었다.
+decorate|장식하다|2|We [decorated] the classroom with balloons.|우리는 풍선으로 교실을 장식했다.
+decrease|줄다, 감소하다|3|The number of students is [decreasing].|학생 수가 줄어들고 있다.
+deep|깊은|2|The lake is very [deep].|그 호수는 매우 깊다.
+deer|사슴|2|We saw a [deer] in the forest.|우리는 숲에서 사슴 한 마리를 보았다.
+degree|(온도) 도, 학위|3|It's 30 [degrees] today.|오늘은 30도이다.
+delay|지연; 미루다|3|The flight was [delayed] by two hours.|비행기가 두 시간 지연되었다.
+delete|삭제하다|3|I [deleted] the photo by mistake.|나는 실수로 그 사진을 삭제했다.
+delicious|맛있는|1|This soup is [delicious].|이 수프는 맛있다.
+deliver|배달하다|2|They [deliver] pizza until midnight.|그들은 자정까지 피자를 배달한다.
+demand|요구하다; 요구|3|The workers [demanded] more money.|노동자들은 돈을 더 달라고 요구했다.
+dentist|치과 의사|2|I go to the [dentist] twice a year.|나는 1년에 두 번 치과에 간다.
+depart|출발하다|3|The train [departs] at 9:30.|기차는 9시 30분에 출발한다.
+department|부서, 매장|3|Let's go shopping at the [department] store.|백화점에 쇼핑하러 가자.
+depend|의존하다, ~에 달려 있다|3|It [depends] on the weather.|그것은 날씨에 달려 있다.
+describe|묘사하다, 설명하다|3|Can you [describe] the man you saw?|네가 본 남자를 묘사해 줄 수 있니?
+desert|사막|2|It rarely rains in the [desert].|사막에는 비가 거의 오지 않는다.
+design|디자인; 설계하다|2|She [designs] clothes for children.|그녀는 아이들 옷을 디자인한다.
+designer|디자이너|2|I want to be a fashion [designer].|나는 패션 디자이너가 되고 싶다.
+desk|책상|1|My books are on the [desk].|내 책은 책상 위에 있다.
+dessert|디저트, 후식|2|We had cake for [dessert].|우리는 후식으로 케이크를 먹었다.
+destroy|파괴하다|3|The fire [destroyed] the old house.|화재가 그 오래된 집을 파괴했다.
+detail|세부 사항|3|Tell me the [details] of your plan.|네 계획의 세부 사항을 말해 줘.
+detective|탐정, 형사|3|The [detective] solved the mystery.|그 탐정이 수수께끼를 풀었다.
+develop|발전시키다, 개발하다|3|Reading helps [develop] your mind.|독서는 생각을 발전시키는 데 도움이 된다.
+dialogue|대화|2|Listen to the [dialogue] and answer the questions.|대화를 듣고 질문에 답하세요.
+diary|일기|1|I write in my [diary] every night.|나는 매일 밤 일기를 쓴다.
+dictionary|사전|2|Look up the word in the [dictionary].|사전에서 그 단어를 찾아봐라.
+die|죽다|1|Flowers [die] without water.|꽃은 물이 없으면 죽는다.
+diet|식단, 다이어트|3|Eat a healthy [diet] with lots of vegetables.|채소가 많은 건강한 식단으로 먹어라.
+difference|차이|2|What's the [difference] between the two pictures?|두 그림의 차이점이 무엇이니?
+different|다른|1|We are in [different] classes.|우리는 서로 다른 반이다.
+difficult|어려운|1|This math problem is [difficult].|이 수학 문제는 어렵다.
+difficulty|어려움|3|He had [difficulty] finding the house.|그는 그 집을 찾는 데 어려움을 겪었다.
+dig|파다|2|The dog is [digging] a hole.|개가 구멍을 파고 있다.
+digital|디지털의|2|I got a [digital] watch for my birthday.|나는 생일 선물로 디지털 시계를 받았다.
+diligent|부지런한|3|She is a [diligent] student.|그녀는 부지런한 학생이다.
+dinner|저녁 식사|1|What's for [dinner]?|저녁 메뉴가 뭐예요?
+dinosaur|공룡|1|[Dinosaurs] lived millions of years ago.|공룡은 수백만 년 전에 살았다.
+direction|방향|2|We walked in the wrong [direction].|우리는 엉뚱한 방향으로 걸었다.
+director|감독, 책임자|3|He is a famous movie [director].|그는 유명한 영화감독이다.
+dirty|더러운|1|Your shoes are [dirty].|네 신발이 더럽다.
+disabled|장애가 있는|3|This parking space is for [disabled] people.|이 주차 공간은 장애인을 위한 것이다.
+disagree|동의하지 않다|2|I [disagree] with your opinion.|나는 네 의견에 동의하지 않는다.
+disappear|사라지다|2|The sun [disappeared] behind the clouds.|해가 구름 뒤로 사라졌다.
+disappoint|실망시키다|3|I'm sorry to [disappoint] you.|너를 실망시켜서 미안해.
+disaster|재난|3|The earthquake was a terrible [disaster].|그 지진은 끔찍한 재난이었다.
+discover|발견하다|2|Columbus [discovered] America in 1492.|콜럼버스는 1492년에 아메리카를 발견했다.
+discovery|발견|3|The [discovery] of fire changed human life.|불의 발견은 인간의 삶을 바꾸었다.
+discuss|논의하다|2|Let's [discuss] the problem together.|그 문제를 함께 논의하자.
+discussion|논의, 토론|3|We had a class [discussion] about bullying.|우리는 학교 폭력에 대해 학급 토론을 했다.
+disease|질병|3|Washing your hands helps prevent [disease].|손을 씻는 것은 질병을 예방하는 데 도움이 된다.
+dish|접시, 요리|1|Bibimbap is my favorite Korean [dish].|비빔밥은 내가 가장 좋아하는 한국 요리이다.
+display|전시하다; 전시|3|Students' paintings are on [display] in the hall.|학생들의 그림이 복도에 전시되어 있다.
+distance|거리|3|The [distance] from here to the station is 2 km.|여기서 역까지의 거리는 2킬로미터이다.
+dive|다이빙하다|2|He [dived] into the pool.|그는 수영장으로 다이빙했다.
+divide|나누다|2|[Divide] the cake into eight pieces.|케이크를 여덟 조각으로 나눠라.
+dizzy|어지러운|3|I feel [dizzy].|나는 어지럽다.
+doctor|의사|1|You should see a [doctor].|너는 의사에게 진찰을 받아야 해.
+document|문서, 서류|3|Please sign this [document].|이 서류에 서명해 주세요.
+dog|개|1|I walk my [dog] every evening.|나는 매일 저녁 개를 산책시킨다.
+doll|인형|1|My sister plays with her [dolls].|내 여동생은 인형을 가지고 논다.
+dollar|달러|1|This book costs ten [dollars].|이 책은 10달러이다.
+dolphin|돌고래|2|[Dolphins] are very smart animals.|돌고래는 아주 똑똑한 동물이다.
+donate|기부하다|3|We [donated] old clothes to the shelter.|우리는 보호소에 헌 옷을 기부했다.
+door|문|1|Someone is knocking on the [door].|누군가 문을 두드리고 있다.
+dormitory|기숙사|3|My sister lives in a [dormitory].|우리 언니는 기숙사에 산다.
+double|두 배의|3|The price has [doubled] since last year.|가격이 작년보다 두 배로 올랐다.
+doubt|의심; 의심하다|3|I [doubt] that he will come.|나는 그가 올지 의심스럽다.
+down|아래로|1|Please sit [down].|앉으세요.
+download|다운로드하다|2|I [downloaded] a new app.|나는 새 앱을 다운로드했다.
+downstairs|아래층으로|2|Breakfast is ready. Come [downstairs]!|아침 준비됐어. 아래층으로 내려와!
+downtown|시내에, 도심에|2|Let's go [downtown] to see a movie.|시내에 영화 보러 가자.
+dozen|12개, 다스|3|I bought a [dozen] eggs.|나는 달걀 열두 개를 샀다.
+dragon|용|2|The knight fought the [dragon].|기사는 용과 싸웠다.
+drama|드라마, 연극|2|I watch a Korean [drama] every night.|나는 매일 밤 한국 드라마를 본다.
+draw|그리다|1|Can you [draw] a cat?|고양이를 그릴 수 있니?
+drawer|서랍|3|The scissors are in the top [drawer].|가위는 맨 위 서랍에 있다.
+dream|꿈; 꿈꾸다|1|My [dream] is to travel around the world.|내 꿈은 세계 일주를 하는 것이다.
+dress|드레스, 원피스; 옷을 입다|1|She wore a red [dress] to the party.|그녀는 파티에 빨간 드레스를 입고 갔다.
+drill|훈련, 연습|3|We had a fire [drill] at school.|우리는 학교에서 소방 훈련을 했다.
+drink|마시다|1|[Drink] lots of water.|물을 많이 마셔라.
+drive|운전하다|1|My mom [drives] me to school.|엄마가 나를 학교에 차로 데려다주신다.
+driver|운전자|2|The bus [driver] is very kind.|그 버스 기사님은 아주 친절하시다.
+drop|떨어뜨리다; 방울|2|I [dropped] my phone on the floor.|나는 바닥에 휴대폰을 떨어뜨렸다.
+drug|약, 마약|3|This [drug] can help with the pain.|이 약은 통증 완화에 도움이 될 수 있다.
+drum|북, 드럼|1|He plays the [drums] in the school band.|그는 학교 밴드에서 드럼을 친다.
+dry|마른, 건조한; 말리다|1|[Dry] your hair before you go to bed.|자기 전에 머리를 말려라.
+duck|오리|1|There are [ducks] on the pond.|연못에 오리들이 있다.
+due|~ 때문에, 예정된|3|The homework is [due] tomorrow.|숙제는 내일까지 내야 한다.
+dull|따분한, 무딘|3|The story was [dull] and long.|그 이야기는 따분하고 길었다.
+dumpling|만두|2|My grandma makes the best [dumplings].|우리 할머니는 최고의 만두를 만드신다.
+during|~ 동안|1|I slept [during] the movie.|나는 영화를 보는 동안 잤다.
+dust|먼지|2|The old books were covered with [dust].|오래된 책들은 먼지로 덮여 있었다.
+duty|의무|3|It's our [duty] to protect nature.|자연을 보호하는 것은 우리의 의무이다.
+dye|염색하다|3|She [dyed] her hair brown.|그녀는 머리를 갈색으로 염색했다.
+each|각각의|1|[Each] student has a locker.|각 학생은 사물함이 하나씩 있다.
+eager|열망하는|3|She is [eager] to learn new things.|그녀는 새로운 것을 배우고 싶어 한다.
+eagle|독수리|2|An [eagle] flew over the mountain.|독수리 한 마리가 산 위를 날아갔다.
+ear|귀|1|Rabbits have long [ears].|토끼는 귀가 길다.
+early|일찍, 이른|1|I got up [early] this morning.|나는 오늘 아침 일찍 일어났다.
+earn|(돈을) 벌다|3|He [earns] money by delivering newspapers.|그는 신문 배달로 돈을 번다.
+earth|지구, 땅|1|The [Earth] goes around the sun.|지구는 태양 주위를 돈다.
+earthquake|지진|3|The [earthquake] shook the whole city.|지진이 도시 전체를 흔들었다.
+easily|쉽게|2|She [easily] solved the puzzle.|그녀는 그 퍼즐을 쉽게 풀었다.
+east|동쪽|1|The sun rises in the [east].|해는 동쪽에서 뜬다.
+easy|쉬운|1|The test was [easy].|그 시험은 쉬웠다.
+eat|먹다|1|What do you want to [eat]?|뭐 먹고 싶니?
+economy|경제|3|Tourism is important to the local [economy].|관광은 지역 경제에 중요하다.
+edge|가장자리, 끝|3|Don't stand too close to the [edge].|가장자리에 너무 가까이 서지 마라.
+education|교육|3|Everyone has the right to [education].|모든 사람은 교육을 받을 권리가 있다.
+effect|효과, 영향|3|The medicine had a good [effect].|그 약은 효과가 좋았다.
+effort|노력|3|Thank you for your [effort].|노력해 줘서 고마워.
+egg|달걀|1|I had a boiled [egg] for breakfast.|나는 아침으로 삶은 달걀을 먹었다.
+either|(둘 중) 어느 하나; ~도 (아니다)|2|I don't like it [either].|나도 그것을 좋아하지 않아.
+elbow|팔꿈치|3|He hurt his [elbow] playing tennis.|그는 테니스를 치다가 팔꿈치를 다쳤다.
+elderly|나이 든, 노인들|3|We should help the [elderly].|우리는 노인들을 도와야 한다.
+election|선거|3|The class president [election] is next week.|반장 선거가 다음 주에 있다.
+electric|전기의|2|My dad bought an [electric] car.|아빠가 전기차를 사셨다.
+electricity|전기|3|Turn off the lights to save [electricity].|전기를 아끼기 위해 불을 꺼라.
+elementary|초등의, 기본의|2|My brother is in [elementary] school.|내 남동생은 초등학생이다.
+elephant|코끼리|1|An [elephant] has a long nose.|코끼리는 코가 길다.
+elevator|엘리베이터|1|Let's take the [elevator].|엘리베이터를 타자.
+else|그 밖의, 다른|2|What [else] do you need?|그 밖에 뭐가 더 필요하니?
+email|이메일|1|I sent you an [email] yesterday.|어제 너에게 이메일을 보냈어.
+emergency|비상, 응급|3|Call 119 in an [emergency].|비상시에는 119에 전화해라.
+emotion|감정|3|It is okay to show your [emotions].|감정을 드러내도 괜찮다.
+empty|비어 있는|2|The box is [empty].|그 상자는 비어 있다.
+encourage|격려하다|3|My teacher [encouraged] me to try again.|선생님께서 나에게 다시 해 보라고 격려해 주셨다.
+end|끝; 끝나다|1|The movie had a happy [end].|그 영화는 행복한 결말이었다.
+enemy|적|3|The soldiers attacked the [enemy].|군인들이 적을 공격했다.
+energy|에너지, 기운|2|Children have a lot of [energy].|아이들은 기운이 넘친다.
+engine|엔진|3|The car [engine] won't start.|자동차 엔진이 시동이 걸리지 않는다.
+engineer|기술자, 엔지니어|2|My uncle is a computer [engineer].|우리 삼촌은 컴퓨터 엔지니어이다.
+enjoy|즐기다|1|Did you [enjoy] the party?|파티는 즐거웠니?
+enough|충분한|1|We have [enough] time.|우리는 시간이 충분하다.
+enter|들어가다, 참가하다|2|Please knock before you [enter].|들어오기 전에 노크해 주세요.
+entrance|입구|2|Let's meet at the main [entrance].|정문 입구에서 만나자.
+environment|환경|2|We should protect the [environment].|우리는 환경을 보호해야 한다.
+equal|같은, 동등한|3|All people are [equal].|모든 사람은 평등하다.
+eraser|지우개|1|Can I borrow your [eraser]?|지우개 좀 빌려도 될까?
+error|실수, 오류|3|There is an [error] in this sentence.|이 문장에는 오류가 있다.
+escape|탈출하다|3|The prisoner [escaped] from the jail.|그 죄수는 감옥에서 탈출했다.
+especially|특히|2|I love fruit, [especially] strawberries.|나는 과일, 특히 딸기를 아주 좋아한다.
+essay|에세이, 글|3|I wrote an [essay] about my family.|나는 우리 가족에 대한 글을 썼다.
+even|~조차, 훨씬|2|[Even] a child can do it.|어린아이조차 그것을 할 수 있다.
+evening|저녁|1|I usually read in the [evening].|나는 보통 저녁에 책을 읽는다.
+event|사건, 행사|2|The school festival is a big [event].|학교 축제는 큰 행사이다.
+ever|언젠가, 한 번이라도|2|Have you [ever] been to Japan?|너는 일본에 가 본 적이 있니?
+every|모든, ~마다|1|I jog [every] morning.|나는 매일 아침 조깅을 한다.
+everyone|모든 사람|1|[Everyone] likes her.|모든 사람이 그녀를 좋아한다.
+everything|모든 것|1|Thank you for [everything].|모든 것에 감사해요.
+everywhere|모든 곳에|2|I looked [everywhere] for my keys.|나는 열쇠를 찾으려고 모든 곳을 뒤졌다.
+evidence|증거|3|There is no [evidence] that he did it.|그가 그것을 했다는 증거는 없다.
+exact|정확한|3|What is the [exact] time?|정확한 시간이 몇 시니?
+exam|시험|1|I have a math [exam] tomorrow.|나는 내일 수학 시험이 있다.
+example|예, 본보기|2|Can you give me an [example]?|예를 하나 들어 줄 수 있니?
+excellent|훌륭한|2|Your English is [excellent].|너의 영어 실력은 훌륭해.
+except|~을 제외하고|3|Everyone came [except] Tom.|Tom을 제외하고 모두 왔다.
+exchange|교환하다; 교환|3|Can I [exchange] this shirt for a bigger one?|이 셔츠를 더 큰 것으로 교환할 수 있나요?
+excited|신이 난, 흥분한|1|I'm so [excited] about the trip.|나는 여행 때문에 정말 신이 난다.
+exciting|신나는, 흥미진진한|1|The game was very [exciting].|그 경기는 매우 흥미진진했다.
+excuse|변명; 용서하다|2|[Excuse] me, where is the station?|실례합니다, 역이 어디예요?
+exercise|운동; 운동하다|1|I [exercise] three times a week.|나는 일주일에 세 번 운동한다.
+exhibition|전시회|3|We visited an art [exhibition].|우리는 미술 전시회를 방문했다.
+exist|존재하다|3|Do you think aliens [exist]?|너는 외계인이 존재한다고 생각하니?
+exit|출구|2|Where is the emergency [exit]?|비상구가 어디예요?
+expect|기대하다, 예상하다|3|I [expect] to get good grades.|나는 좋은 성적을 받을 것으로 기대한다.
+expensive|비싼|1|This watch is too [expensive].|이 시계는 너무 비싸다.
+experience|경험; 경험하다|2|Traveling alone was a great [experience].|혼자 여행한 것은 멋진 경험이었다.
+experiment|실험|3|We did an [experiment] in science class.|우리는 과학 시간에 실험을 했다.
+expert|전문가|3|He is an [expert] on dinosaurs.|그는 공룡 전문가이다.
+explain|설명하다|2|Can you [explain] this word to me?|이 단어를 나에게 설명해 줄 수 있니?
+explore|탐험하다|3|We [explored] the old castle.|우리는 오래된 성을 탐험했다.
+express|표현하다|3|It is hard to [express] my feelings in English.|영어로 내 감정을 표현하기는 어렵다.
+expression|표현, 표정|3|This [expression] is often used in daily life.|이 표현은 일상생활에서 자주 쓰인다.
+extra|추가의|3|I need [extra] time to finish this.|이것을 끝내려면 추가 시간이 필요하다.
+eye|눈|1|She has big brown [eyes].|그녀는 크고 갈색인 눈을 가졌다.
+fable|우화|3|"The Ant and the Grasshopper" is a famous [fable].|'개미와 베짱이'는 유명한 우화이다.
+face|얼굴; 직면하다|1|Wash your [face] with cold water.|찬물로 세수해라.
+fact|사실|2|Is that a [fact] or an opinion?|그것은 사실이니, 의견이니?
+factory|공장|2|My uncle works in a car [factory].|우리 삼촌은 자동차 공장에서 일하신다.
+fail|실패하다, (시험에) 떨어지다|2|Don't be afraid to [fail].|실패하는 것을 두려워하지 마라.
+failure|실패|3|[Failure] teaches us important lessons.|실패는 우리에게 중요한 교훈을 준다.
+fair|공정한; 박람회|2|That's not [fair]!|그건 불공평해!
+fairy|요정|2|The [fairy] granted her three wishes.|요정은 그녀의 세 가지 소원을 들어주었다.
+fairy tale|동화|2|My mom read me [fairy tales] at night.|엄마는 밤에 나에게 동화를 읽어 주셨다.
+fall|떨어지다, 넘어지다; 가을|1|Be careful not to [fall].|넘어지지 않게 조심해.
+false|틀린, 거짓의|2|Is this sentence true or [false]?|이 문장은 참이니, 거짓이니?
+familiar|익숙한, 친숙한|3|His face looks [familiar].|그의 얼굴이 낯익다.
+family|가족|1|There are four people in my [family].|우리 가족은 네 명이다.
+famous|유명한|1|Jeju is [famous] for its beautiful beaches.|제주는 아름다운 해변으로 유명하다.
+fan|팬, 선풍기|1|I'm a big [fan] of that singer.|나는 그 가수의 열렬한 팬이다.
+fantastic|환상적인|2|We had a [fantastic] time at the beach.|우리는 해변에서 환상적인 시간을 보냈다.
+far|먼, 멀리|1|Is your school [far] from here?|너희 학교는 여기서 머니?
+fare|요금|3|The bus [fare] is 1,500 won.|버스 요금은 1,500원이다.
+farm|농장|1|My grandparents live on a [farm].|조부모님은 농장에 사신다.
+farmer|농부|1|The [farmer] grows rice and vegetables.|그 농부는 쌀과 채소를 기른다.
+fashion|패션, 유행|2|She is interested in [fashion].|그녀는 패션에 관심이 있다.
+fast|빠른, 빨리|1|Cheetahs can run very [fast].|치타는 아주 빨리 달릴 수 있다.
+fasten|매다, 채우다|3|Please [fasten] your seat belt.|안전벨트를 매 주세요.
+fat|뚱뚱한; 지방|2|Eating too much fast food can make you [fat].|패스트푸드를 너무 많이 먹으면 살이 찔 수 있다.
+faucet|수도꼭지|3|Turn off the [faucet] while you brush your teeth.|이를 닦는 동안에는 수도꼭지를 잠가라.
+fault|잘못, 결점|3|It's not your [fault].|그건 네 잘못이 아니야.
+favor|부탁, 호의|2|Can you do me a [favor]?|부탁 하나 들어줄래?
+favorite|가장 좋아하는|1|What's your [favorite] food?|네가 가장 좋아하는 음식은 뭐니?
+fear|두려움; 두려워하다|2|She has a [fear] of high places.|그녀는 고소 공포증이 있다.
+feather|깃털|3|The bird has colorful [feathers].|그 새는 화려한 깃털을 가지고 있다.
+feature|특징|3|What are the main [features] of this phone?|이 휴대폰의 주요 특징은 무엇이니?
+fee|요금, 수수료|3|There is no entrance [fee].|입장료는 없다.
+feed|먹이를 주다|2|Don't forget to [feed] the cat.|고양이 밥 주는 것 잊지 마.
+feel|느끼다|1|I [feel] happy today.|나는 오늘 기분이 좋다.
+feeling|느낌, 감정|2|I have a good [feeling] about this.|이 일은 느낌이 좋다.
+female|여성의, 암컷|3|The [female] lion hunts for food.|암사자가 먹이를 사냥한다.
+fence|울타리|2|The dog jumped over the [fence].|개가 울타리를 뛰어넘었다.
+festival|축제|1|The school [festival] is next Friday.|학교 축제는 다음 주 금요일이다.
+fever|열|2|I have a high [fever].|나는 열이 많이 난다.
+few|적은, 몇몇의|2|I have a [few] friends in Canada.|나는 캐나다에 친구가 몇 명 있다.
+fiction|소설, 허구|3|I like science [fiction] movies.|나는 공상 과학 영화를 좋아한다.
+field|들판, 분야, 경기장|2|The cows are eating grass in the [field].|소들이 들판에서 풀을 먹고 있다.
+fight|싸우다; 싸움|1|Don't [fight] with your brother.|형과 싸우지 마라.
+figure|숫자, 모습, 인물|3|She is an important [figure] in history.|그녀는 역사상 중요한 인물이다.
+fill|채우다|2|[Fill] the glass with water.|잔에 물을 채워라.
+film|영화, 필름|2|This [film] won many awards.|이 영화는 많은 상을 받았다.
+final|마지막의; 결승전|2|Our team made it to the [final].|우리 팀이 결승전에 진출했다.
+finally|마침내|2|We [finally] reached the top of the mountain.|우리는 마침내 산 정상에 도착했다.
+find|찾다, 발견하다|1|I can't [find] my glasses.|내 안경을 찾을 수가 없어.
+fine|좋은, 괜찮은; 벌금|1|I'm [fine], thank you.|저는 괜찮아요, 고마워요.
+finger|손가락|1|I cut my [finger] with a knife.|나는 칼에 손가락을 베었다.
+fingernail|손톱|3|Cut your [fingernails] short.|손톱을 짧게 잘라라.
+finish|끝내다|1|Did you [finish] your homework?|숙제 다 끝냈니?
+fire|불, 화재|1|The [fire] spread quickly.|불이 빠르게 번졌다.
+firefighter|소방관|1|The [firefighter] put out the fire.|소방관이 불을 껐다.
+firework|불꽃놀이|2|We watched the [fireworks] on New Year's Eve.|우리는 새해 전날 밤에 불꽃놀이를 보았다.
+firm|단단한, 확고한; 회사|3|The bed is too [firm] for me.|그 침대는 나에게 너무 딱딱하다.
+first|첫 번째의, 처음|1|This is my [first] time in Seoul.|나는 이번에 서울에 처음 왔다.
+fish|물고기, 생선|1|We caught three [fish] in the river.|우리는 강에서 물고기 세 마리를 잡았다.
+fisherman|어부|2|The [fisherman] caught a big fish.|어부가 큰 물고기를 잡았다.
+fit|맞다; 건강한|2|These jeans don't [fit] me.|이 청바지는 나에게 맞지 않는다.
+fix|고치다|1|Can you [fix] my bike?|내 자전거 좀 고쳐 줄 수 있어?
+flag|깃발|2|The Korean [flag] is called Taegukgi.|한국의 국기는 태극기라고 불린다.
+flashlight|손전등|3|Take a [flashlight] when you go camping.|캠핑 갈 때 손전등을 가져가라.
+flat|평평한; 바람이 빠진|3|I got a [flat] tire on the way.|오는 길에 타이어가 펑크 났다.
+flexible|유연한|3|Dancers have [flexible] bodies.|무용수들은 몸이 유연하다.
+flight|비행, 항공편|2|Our [flight] leaves at 8 a.m.|우리 비행기는 오전 8시에 출발한다.
+float|뜨다|3|Wood [floats] on water.|나무는 물에 뜬다.
+flood|홍수|3|The heavy rain caused a [flood].|폭우로 홍수가 났다.
+floor|바닥, 층|1|My room is on the second [floor].|내 방은 2층에 있다.
+flour|밀가루|3|You need [flour] and eggs to make a cake.|케이크를 만들려면 밀가루와 달걀이 필요하다.
+flower|꽃|1|She gave me a [flower].|그녀가 나에게 꽃 한 송이를 주었다.
+flu|독감|2|I stayed in bed with the [flu].|나는 독감에 걸려 누워 있었다.
+fluent|유창한|3|She is [fluent] in English.|그녀는 영어가 유창하다.
+fly|날다; 파리|1|Birds can [fly].|새는 날 수 있다.
+focus|집중하다; 초점|3|[Focus] on your studies.|공부에 집중해라.
+fog|안개|3|The [fog] was so thick that we couldn't see.|안개가 너무 짙어서 우리는 앞을 볼 수 없었다.
+foggy|안개 낀|2|It's [foggy] this morning.|오늘 아침은 안개가 끼었다.
+fold|접다|2|[Fold] the paper in half.|종이를 반으로 접어라.
+follow|따라가다|1|[Follow] me, please.|저를 따라오세요.
+fond|좋아하는|3|I'm [fond] of animals.|나는 동물을 좋아한다.
+fool|바보|3|Don't be a [fool].|바보같이 굴지 마.
+foolish|어리석은|3|It was [foolish] of me to believe him.|그를 믿다니 내가 어리석었다.
+foot|발|1|My [foot] hurts.|발이 아프다.
+football|축구, 미식축구|1|We play [football] after school.|우리는 방과 후에 축구를 한다.
+forecast|예보|3|The weather [forecast] says it will rain.|일기 예보에서 비가 올 거라고 한다.
+forehead|이마|3|He has a scar on his [forehead].|그는 이마에 흉터가 있다.
+foreign|외국의|2|Can you speak a [foreign] language?|너는 외국어를 할 수 있니?
+foreigner|외국인|2|Many [foreigners] visit Gyeongbokgung.|많은 외국인들이 경복궁을 방문한다.
+forest|숲|1|We took a walk in the [forest].|우리는 숲에서 산책을 했다.
+forever|영원히|2|I will remember you [forever].|나는 너를 영원히 기억할 거야.
+forget|잊다|1|Don't [forget] to call me.|나에게 전화하는 것 잊지 마.
+forgive|용서하다|3|Please [forgive] me.|저를 용서해 주세요.
+fork|포크|1|Use a [fork] to eat the salad.|샐러드는 포크로 먹어라.
+form|형태; 서류 양식; 형성하다|3|Please fill out this [form].|이 서류를 작성해 주세요.
+fortunately|다행히|3|[Fortunately], no one was hurt.|다행히 아무도 다치지 않았다.
+fortune|운, 재산|3|He made a [fortune] selling shoes.|그는 신발을 팔아 큰돈을 벌었다.
+forward|앞으로|3|I'm looking [forward] to the trip.|나는 그 여행을 고대하고 있다.
+fox|여우|1|The [fox] ran into the woods.|여우가 숲속으로 달려갔다.
+frame|틀, 액자|3|I put the photo in a [frame].|나는 사진을 액자에 넣었다.
+free|자유로운, 무료의|1|The museum is [free] on Sundays.|그 박물관은 일요일에 무료이다.
+freedom|자유|3|People fought for [freedom].|사람들은 자유를 위해 싸웠다.
+freeze|얼다|3|Water [freezes] at 0°C.|물은 섭씨 0도에서 언다.
+frequently|자주|3|He [frequently] visits his grandparents.|그는 자주 조부모님 댁을 방문한다.
+fresh|신선한|1|These vegetables are [fresh].|이 채소들은 신선하다.
+fridge|냉장고|2|Put the milk in the [fridge].|우유를 냉장고에 넣어라.
+friend|친구|1|He is my best [friend].|그는 나의 가장 친한 친구이다.
+friendly|친절한, 다정한|1|The people here are very [friendly].|이곳 사람들은 매우 친절하다.
+friendship|우정|2|Our [friendship] is very important to me.|우리의 우정은 나에게 매우 소중하다.
+frightened|겁먹은|3|The child was [frightened] by the thunder.|그 아이는 천둥소리에 겁을 먹었다.
+frog|개구리|1|A [frog] jumped into the pond.|개구리 한 마리가 연못으로 뛰어들었다.
+front|앞, 앞쪽|1|Let's meet in [front] of the school.|학교 앞에서 만나자.
+fruit|과일|1|I eat [fruit] every day.|나는 매일 과일을 먹는다.
+frustrated|좌절한|3|I felt [frustrated] when I failed again.|나는 또 실패했을 때 좌절감을 느꼈다.
+fry|튀기다, 볶다|2|My mom [fried] some eggs for me.|엄마가 나에게 달걀 프라이를 해 주셨다.
+fuel|연료|3|Cars need [fuel] to run.|자동차가 달리려면 연료가 필요하다.
+full|가득 찬, 배부른|1|I'm [full]. I can't eat any more.|배불러. 더 이상 못 먹겠어.
+fun|재미; 재미있는|1|We had a lot of [fun] at the party.|우리는 파티에서 아주 재미있게 놀았다.
+funny|웃기는, 재미있는|1|He told a [funny] story.|그는 웃긴 이야기를 해 주었다.
+fur|털, 모피|3|The cat has soft white [fur].|그 고양이는 부드러운 흰 털을 가지고 있다.
+furniture|가구|3|We bought new [furniture] for the living room.|우리는 거실에 둘 새 가구를 샀다.
+future|미래|1|What do you want to be in the [future]?|너는 장래에 무엇이 되고 싶니?
+gain|얻다; (체중이) 늘다|3|I [gained] 2 kg during the vacation.|나는 방학 동안 2킬로그램이 쪘다.
+gallery|미술관, 화랑|3|We saw famous paintings at the [gallery].|우리는 미술관에서 유명한 그림들을 보았다.
+game|게임, 경기|1|Let's play a [game].|게임 하자.
+garage|차고|2|Dad parked the car in the [garage].|아빠가 차고에 차를 세우셨다.
+garbage|쓰레기|2|Please take out the [garbage].|쓰레기 좀 내다 버려 줘.
+garden|정원, 텃밭|1|My grandma grows tomatoes in her [garden].|우리 할머니는 텃밭에서 토마토를 기르신다.
+garlic|마늘|2|Korean food often has [garlic] in it.|한국 음식에는 마늘이 자주 들어간다.
+gas|가스, 휘발유|3|We need to stop for [gas].|우리는 주유하러 멈춰야 한다.
+gate|문, 출입구|2|Let's meet at the school [gate].|교문에서 만나자.
+gather|모이다, 모으다|3|People [gathered] to watch the parade.|사람들이 퍼레이드를 보려고 모였다.
+general|일반적인|3|In [general], boys are taller than girls.|일반적으로 남자아이들이 여자아이들보다 키가 크다.
+generation|세대|3|Each [generation] has its own culture.|각 세대는 저마다의 문화를 가지고 있다.
+generous|관대한, 너그러운|3|He is [generous] with his time.|그는 자신의 시간을 아낌없이 내준다.
+genius|천재|3|Einstein was a [genius].|아인슈타인은 천재였다.
+gentle|온화한, 부드러운|3|My grandfather has a [gentle] voice.|우리 할아버지는 목소리가 부드러우시다.
+gentleman|신사|2|Ladies and [gentlemen], welcome!|신사 숙녀 여러분, 환영합니다!
+gesture|몸짓, 제스처|3|He made a [gesture] for me to come in.|그는 나에게 들어오라는 몸짓을 했다.
+get|얻다, 받다; ~이 되다|1|I [get] up at 7 every day.|나는 매일 7시에 일어난다.
+ghost|유령|2|Do you believe in [ghosts]?|너는 유령이 있다고 믿니?
+giant|거인; 거대한|2|The [giant] lived at the top of the beanstalk.|거인은 콩나무 꼭대기에 살았다.
+gift|선물; 재능|1|Thank you for the [gift].|선물 고마워.
+giraffe|기린|1|A [giraffe] has a very long neck.|기린은 목이 아주 길다.
+girl|소녀, 여자아이|1|The [girl] with long hair is my sister.|머리가 긴 저 여자아이가 내 여동생이다.
+give|주다|1|Can you [give] me some water?|물 좀 줄래?
+glad|기쁜|1|I'm [glad] to meet you.|만나서 기뻐요.
+glass|유리, 유리잔|1|Can I have a [glass] of water?|물 한 잔 마실 수 있을까요?
+glasses|안경|1|I can't see well without my [glasses].|나는 안경이 없으면 잘 볼 수 없다.
+global|세계적인|3|[Global] warming is a serious problem.|지구 온난화는 심각한 문제이다.
+glove|장갑|2|Wear [gloves] when it's cold.|추울 때는 장갑을 껴라.
+glue|풀, 접착제|2|Stick the picture on the paper with [glue].|풀로 그림을 종이에 붙여라.
+go|가다|1|Let's [go] to the park.|공원에 가자.
+goal|목표, 골|2|My [goal] is to get an A in English.|내 목표는 영어에서 A를 받는 것이다.
+goat|염소|2|The [goat] is eating grass.|염소가 풀을 먹고 있다.
+god|신|3|The Greeks believed in many [gods].|그리스인들은 많은 신을 믿었다.
+gold|금|2|She won a [gold] medal.|그녀는 금메달을 땄다.
+goldfish|금붕어|2|I have two [goldfish].|나는 금붕어 두 마리가 있다.
+golf|골프|2|My grandpa plays [golf] on Sundays.|우리 할아버지는 일요일마다 골프를 치신다.
+good|좋은|1|This is a [good] idea.|이건 좋은 생각이다.
+goods|상품, 물건|3|The store sells sports [goods].|그 가게는 스포츠 용품을 판다.
+government|정부|3|The [government] built a new hospital.|정부가 새 병원을 지었다.
+grab|움켜잡다|3|He [grabbed] my arm.|그가 내 팔을 움켜잡았다.
+grade|성적, 학년|2|I'm in the eighth [grade].|나는 8학년(중학교 2학년)이다.
+graduate|졸업하다|3|My sister will [graduate] from high school next year.|우리 언니는 내년에 고등학교를 졸업한다.
+grain|곡물, 낟알|3|Rice is a kind of [grain].|쌀은 곡물의 한 종류이다.
+grandfather|할아버지|1|My [grandfather] is 80 years old.|우리 할아버지는 80세이시다.
+grandmother|할머니|1|My [grandmother] tells me old stories.|우리 할머니는 나에게 옛날이야기를 해 주신다.
+grape|포도|1|I like [grapes] better than apples.|나는 사과보다 포도를 더 좋아한다.
+grass|풀, 잔디|1|Keep off the [grass].|잔디밭에 들어가지 마시오.
+grasshopper|메뚜기, 베짱이|3|The [grasshopper] played all summer.|베짱이는 여름 내내 놀았다.
+grateful|감사하는|3|I'm [grateful] for your help.|도와주셔서 감사합니다.
+gray|회색의|1|The sky is [gray] today.|오늘은 하늘이 회색이다.
+great|위대한, 훌륭한|1|You did a [great] job!|정말 잘했어!
+greedy|욕심 많은|3|The [greedy] king wanted more gold.|욕심 많은 왕은 금을 더 원했다.
+green|초록색의|1|The leaves are [green] in summer.|여름에는 나뭇잎이 초록색이다.
+greet|인사하다, 맞이하다|3|She [greeted] us with a smile.|그녀는 미소로 우리를 맞이했다.
+grocery|식료품, 식료품점|3|I went to the [grocery] store to buy milk.|나는 우유를 사러 식료품점에 갔다.
+ground|땅, 운동장|1|The kids are playing on the [ground].|아이들이 운동장에서 놀고 있다.
+group|무리, 그룹|1|We worked in [groups] of four.|우리는 4명씩 모둠으로 활동했다.
+grow|자라다, 기르다|1|Plants [grow] fast in summer.|식물은 여름에 빨리 자란다.
+guard|경비원; 지키다|3|The [guard] stopped us at the gate.|경비원이 정문에서 우리를 세웠다.
+guess|추측하다|2|[Guess] what I have in my hand.|내 손에 뭐가 있는지 맞혀 봐.
+guest|손님|2|We have [guests] for dinner tonight.|오늘 저녁에 손님이 오신다.
+guide|안내하다; 안내자|2|The tour [guide] showed us around the palace.|여행 가이드가 우리에게 궁궐을 안내해 주었다.
+guitar|기타|1|He plays the [guitar] very well.|그는 기타를 아주 잘 친다.
+gym|체육관|1|We have P.E. class in the [gym].|우리는 체육관에서 체육 수업을 한다.
+habit|습관|2|Reading every day is a good [habit].|매일 책을 읽는 것은 좋은 습관이다.
+habitat|서식지|3|The forest is a [habitat] for many animals.|숲은 많은 동물들의 서식지이다.
+hair|머리카락|1|She has long black [hair].|그녀는 긴 검은 머리를 가지고 있다.
+hairdresser|미용사|3|The [hairdresser] cut my hair short.|미용사가 내 머리를 짧게 잘라 주었다.
+half|절반|1|I ate [half] of the pizza.|나는 피자의 절반을 먹었다.
+hall|홀, 복도|2|Don't run in the [hall].|복도에서 뛰지 마라.
+hallway|복도|3|Don't run in the [hallway].|복도에서 뛰지 마라.
+hamburger|햄버거|1|I'll have a [hamburger] and a coke.|햄버거 하나랑 콜라 주세요.
+hammer|망치|3|He hit the nail with a [hammer].|그는 망치로 못을 쳤다.
+hand|손|1|Raise your [hand] if you know the answer.|답을 알면 손을 드세요.
+handkerchief|손수건|3|He wiped his face with a [handkerchief].|그는 손수건으로 얼굴을 닦았다.
+handle|다루다, 처리하다; 손잡이|3|I can [handle] this problem myself.|이 문제는 내가 혼자 처리할 수 있다.
+handsome|잘생긴|1|Her brother is tall and [handsome].|그녀의 오빠는 키가 크고 잘생겼다.
+hang|걸다, 매달다|2|[Hang] your jacket on the hook.|재킷을 고리에 걸어라.
+happen|일어나다, 발생하다|2|What [happened] to you?|너에게 무슨 일이 있었니?
+happiness|행복|2|Money can't buy [happiness].|돈으로 행복을 살 수는 없다.
+happy|행복한|1|I'm so [happy] to see you.|너를 보니 정말 행복해.
+hard|어려운, 단단한; 열심히|1|She studies [hard] every day.|그녀는 매일 열심히 공부한다.
+hardly|거의 ~ 않다|3|I could [hardly] hear him.|나는 그의 말을 거의 들을 수 없었다.
+harm|해, 피해|3|Too much sun can do [harm] to your skin.|햇빛을 너무 많이 쬐면 피부에 해로울 수 있다.
+harmony|조화|3|We should live in [harmony] with nature.|우리는 자연과 조화를 이루며 살아야 한다.
+harvest|수확; 수확하다|3|Farmers [harvest] rice in autumn.|농부들은 가을에 벼를 수확한다.
+hat|모자|1|Wear a [hat] on sunny days.|화창한 날에는 모자를 써라.
+hate|몹시 싫어하다|1|I [hate] waiting in line.|나는 줄 서서 기다리는 것을 정말 싫어한다.
+head|머리|1|I have a pain in my [head].|나는 머리가 아프다.
+headache|두통|2|I have a terrible [headache].|나는 두통이 심하다.
+headphones|헤드폰|2|I listen to music with [headphones].|나는 헤드폰으로 음악을 듣는다.
+health|건강|2|Smoking is bad for your [health].|흡연은 건강에 나쁘다.
+healthy|건강한|1|Eat [healthy] food.|건강한 음식을 먹어라.
+hear|듣다, 들리다|1|Can you [hear] me?|내 말 들리니?
+heart|심장, 마음|1|She has a kind [heart].|그녀는 마음씨가 착하다.
+heat|열, 더위|3|I can't stand the summer [heat].|나는 여름 더위를 견딜 수 없다.
+heater|난방기, 히터|2|Turn on the [heater]. It's cold.|히터 좀 켜. 추워.
+heavy|무거운|1|This box is too [heavy] to lift.|이 상자는 너무 무거워서 들 수 없다.
+height|키, 높이|3|What is the [height] of that tower?|저 탑의 높이는 얼마니?
+hello|안녕(인사)|1|Say [hello] to your parents.|부모님께 안부 전해 드려.
+helmet|헬멧|2|Always wear a [helmet] when you ride a bike.|자전거를 탈 때는 항상 헬멧을 써라.
+help|돕다; 도움|1|Can you [help] me with my homework?|내 숙제 좀 도와줄 수 있니?
+helpful|도움이 되는|2|Your advice was very [helpful].|네 조언이 많은 도움이 되었어.
+hen|암탉|2|The [hen] laid an egg.|암탉이 알을 낳았다.
+here|여기에|1|Come [here], please.|이리 와 주세요.
+hero|영웅|2|My father is my [hero].|우리 아버지는 나의 영웅이다.
+hide|숨다, 숨기다|2|The cat [hid] under the bed.|고양이가 침대 밑에 숨었다.
+high|높은|1|The mountain is very [high].|그 산은 매우 높다.
+highway|고속도로|3|We drove on the [highway] to Busan.|우리는 고속도로를 타고 부산에 갔다.
+hike|하이킹하다, 도보 여행|2|We went on a [hike] in the mountains.|우리는 산으로 하이킹을 갔다.
+hill|언덕|1|There is a church on the [hill].|언덕 위에 교회가 하나 있다.
+hire|고용하다|3|The company [hired] ten new workers.|그 회사는 새 직원 열 명을 고용했다.
+history|역사|1|I'm interested in Korean [history].|나는 한국사에 관심이 있다.
+hit|치다, 때리다|1|He [hit] the ball with a bat.|그는 방망이로 공을 쳤다.
+hobby|취미|1|My [hobby] is taking pictures.|내 취미는 사진 찍기이다.
+hold|잡다, 들다; 개최하다|1|[Hold] my hand.|내 손을 잡아.
+hole|구멍|2|There is a [hole] in my sock.|내 양말에 구멍이 났다.
+holiday|휴일, 방학|1|Chuseok is a big [holiday] in Korea.|추석은 한국의 큰 명절이다.
+home|집, 가정|1|I want to go [home].|나는 집에 가고 싶다.
+homeless|노숙자의, 집 없는|3|They gave food to [homeless] people.|그들은 노숙인들에게 음식을 나눠 주었다.
+hometown|고향|2|My [hometown] is a small village.|내 고향은 작은 마을이다.
+homework|숙제|1|I have a lot of [homework] today.|나는 오늘 숙제가 많다.
+honest|정직한|2|He is an [honest] boy.|그는 정직한 소년이다.
+honey|꿀|2|Bees make [honey].|벌은 꿀을 만든다.
+honor|명예, 영광|3|It is an [honor] to meet you.|당신을 만나게 되어 영광입니다.
+hope|희망; 바라다|1|I [hope] you get well soon.|네가 빨리 낫기를 바라.
+horrible|끔찍한|3|What a [horrible] smell!|정말 끔찍한 냄새다!
+horror|공포|3|I don't like [horror] movies.|나는 공포 영화를 좋아하지 않는다.
+horse|말|1|Can you ride a [horse]?|너는 말을 탈 줄 아니?
+hospital|병원|1|My grandmother is in the [hospital].|우리 할머니는 병원에 입원해 계신다.
+host|주인, 진행자|3|He is the [host] of a TV show.|그는 TV 프로그램 진행자이다.
+hot|뜨거운, 더운; 매운|1|It's very [hot] today.|오늘은 매우 덥다.
+hour|시간|1|I study for two [hours] every day.|나는 매일 두 시간씩 공부한다.
+house|집|1|My [house] is near the park.|우리 집은 공원 근처에 있다.
+housework|집안일|2|I help my parents with the [housework].|나는 부모님의 집안일을 돕는다.
+however|그러나, 하지만|2|It was raining. [However], we went out.|비가 오고 있었다. 하지만 우리는 밖에 나갔다.
+hug|껴안다; 포옹|2|She [hugged] her mother.|그녀는 엄마를 껴안았다.
+huge|거대한|2|They live in a [huge] house.|그들은 거대한 집에 산다.
+human|인간; 인간의|2|Dogs can hear sounds that [humans] cannot.|개는 사람이 들을 수 없는 소리를 들을 수 있다.
+humor|유머|3|He has a good sense of [humor].|그는 유머 감각이 좋다.
+hundred|100, 백|1|There are a [hundred] students in the hall.|강당에 학생이 100명 있다.
+hunger|배고픔, 굶주림|3|Many children suffer from [hunger].|많은 아이들이 굶주림에 시달린다.
+hungry|배고픈|1|I'm so [hungry].|나는 너무 배고파.
+hunt|사냥하다|3|Lions [hunt] at night.|사자는 밤에 사냥한다.
+hurry|서두르다|1|[Hurry] up, or you'll be late.|서둘러, 그렇지 않으면 늦을 거야.
+hurt|다치게 하다, 아프다|1|My leg [hurts].|다리가 아프다.
+husband|남편|2|Her [husband] is a teacher.|그녀의 남편은 교사이다.
+ice|얼음|1|The lake is covered with [ice].|호수가 얼음으로 덮여 있다.
+iceberg|빙산|3|The ship hit an [iceberg].|배가 빙산에 부딪혔다.
+idea|생각, 아이디어|1|That's a good [idea].|그거 좋은 생각이다.
+ideal|이상적인|3|This is an [ideal] place for a picnic.|이곳은 소풍하기에 이상적인 장소이다.
+if|만약 ~라면|1|[If] it rains, we will stay home.|비가 오면 우리는 집에 있을 것이다.
+ignore|무시하다|3|Don't [ignore] my messages.|내 메시지를 무시하지 마.
+ill|아픈|2|He is [ill] in bed.|그는 아파서 누워 있다.
+illness|병|3|He missed school because of [illness].|그는 병 때문에 학교에 결석했다.
+image|이미지, 모습|3|The [image] on the screen is not clear.|화면의 이미지가 선명하지 않다.
+imagination|상상력|3|Children have a lot of [imagination].|아이들은 상상력이 풍부하다.
+imagine|상상하다|2|[Imagine] you are a bird.|네가 새라고 상상해 봐.
+immediately|즉시|3|Call me [immediately] if anything happens.|무슨 일이 생기면 즉시 나에게 전화해.
+importance|중요성|3|We learned the [importance] of saving water.|우리는 물 절약의 중요성을 배웠다.
+important|중요한|1|Breakfast is the most [important] meal of the day.|아침 식사는 하루 중 가장 중요한 식사이다.
+impossible|불가능한|2|Nothing is [impossible].|불가능한 것은 없다.
+impress|감동을 주다, 깊은 인상을 주다|3|His speech [impressed] everyone.|그의 연설은 모든 사람에게 감동을 주었다.
+improve|향상시키다|3|I want to [improve] my English.|나는 영어 실력을 향상시키고 싶다.
+include|포함하다|3|The price [includes] breakfast.|그 가격에는 아침 식사가 포함되어 있다.
+increase|증가하다; 증가|3|The number of tourists [increased] this year.|올해 관광객 수가 증가했다.
+indeed|정말로, 실제로|3|A friend in need is a friend [indeed].|어려울 때 친구가 진정한 친구이다.
+independent|독립적인|3|She wants to be [independent] from her parents.|그녀는 부모님으로부터 독립하고 싶어 한다.
+indoor|실내의|2|Swimming is my favorite [indoor] sport.|수영은 내가 가장 좋아하는 실내 운동이다.
+industry|산업|3|The car [industry] is important in Korea.|자동차 산업은 한국에서 중요하다.
+influence|영향; 영향을 미치다|3|My teacher had a great [influence] on me.|선생님은 나에게 큰 영향을 주셨다.
+inform|알리다|3|Please [inform] us of any changes.|변경 사항이 있으면 저희에게 알려 주세요.
+information|정보|2|You can find [information] on the Internet.|인터넷에서 정보를 찾을 수 있다.
+ingredient|재료|3|What are the [ingredients] of this cake?|이 케이크의 재료는 무엇이니?
+injure|다치게 하다|3|He was [injured] in a car accident.|그는 교통사고로 부상을 입었다.
+ink|잉크|2|The pen has run out of [ink].|펜의 잉크가 다 떨어졌다.
+insect|곤충|2|Ants and bees are [insects].|개미와 벌은 곤충이다.
+inside|안에, 안쪽|1|Let's go [inside]. It's raining.|안으로 들어가자. 비가 와.
+insist|주장하다|3|He [insisted] that he was right.|그는 자기가 옳다고 주장했다.
+instead|대신에|2|Let's walk [instead] of taking the bus.|버스를 타는 대신 걸어가자.
+instruction|설명, 지시|3|Read the [instructions] carefully.|설명서를 주의 깊게 읽어라.
+instrument|악기, 도구|2|Can you play a musical [instrument]?|너는 악기를 연주할 수 있니?
+intelligent|똑똑한, 지능이 있는|3|Dolphins are [intelligent] animals.|돌고래는 지능이 높은 동물이다.
+interest|관심, 흥미|2|She has an [interest] in music.|그녀는 음악에 관심이 있다.
+interested|관심 있는|1|I'm [interested] in science.|나는 과학에 관심이 있다.
+interesting|흥미로운|1|This book is very [interesting].|이 책은 매우 흥미롭다.
+international|국제적인|3|Incheon has an [international] airport.|인천에는 국제공항이 있다.
+Internet|인터넷|1|I use the [Internet] to find information.|나는 정보를 찾기 위해 인터넷을 사용한다.
+interview|인터뷰, 면접|3|I have a job [interview] tomorrow.|나는 내일 취업 면접이 있다.
+introduce|소개하다|2|Let me [introduce] myself.|제 소개를 하겠습니다.
+invent|발명하다|2|Who [invented] the telephone?|누가 전화기를 발명했니?
+invention|발명품, 발명|3|The light bulb was a great [invention].|전구는 위대한 발명품이었다.
+invite|초대하다|1|I'll [invite] you to my birthday party.|너를 내 생일 파티에 초대할게.
+island|섬|1|Jeju is a beautiful [island].|제주는 아름다운 섬이다.
+issue|문제, 쟁점|3|Climate change is a big [issue].|기후 변화는 큰 문제이다.
+item|물건, 항목|3|How many [items] did you buy?|물건을 몇 개 샀니?
+jacket|재킷, 상의|1|Take your [jacket] with you.|재킷을 가져가라.
+jam|잼; 교통 체증|2|I was late because of a traffic [jam].|나는 교통 체증 때문에 늦었다.
+jar|병, 단지|3|There is honey in the [jar].|병 안에 꿀이 있다.
+jeans|청바지|1|I usually wear [jeans] on weekends.|나는 주말에 보통 청바지를 입는다.
+jellyfish|해파리|3|Be careful of [jellyfish] in the sea.|바다에서 해파리를 조심해라.
+jewel|보석|3|The queen's crown was full of [jewels].|여왕의 왕관은 보석으로 가득했다.
+job|일, 직업|1|What's your father's [job]?|너희 아버지의 직업은 무엇이니?
+jog|조깅하다|2|I [jog] in the park every morning.|나는 매일 아침 공원에서 조깅한다.
+join|가입하다, 함께하다|1|Why don't you [join] us?|우리와 함께하는 게 어때?
+joke|농담|1|He told us a funny [joke].|그는 우리에게 웃긴 농담을 했다.
+journey|여행, 여정|3|It was a long [journey] home.|집으로 오는 길은 긴 여정이었다.
+joy|기쁨|2|She cried for [joy].|그녀는 기뻐서 울었다.
+judge|판단하다; 판사, 심사위원|3|Don't [judge] a book by its cover.|겉모습으로 판단하지 마라.
+juice|주스|1|I'd like some orange [juice].|오렌지 주스 좀 주세요.
+jump|뛰다, 점프하다|1|The kids are [jumping] on the bed.|아이들이 침대 위에서 뛰고 있다.
+jungle|정글, 밀림|2|Tigers live in the [jungle].|호랑이는 정글에 산다.
+junior|나이가 어린; 후배|3|He is a [junior] member of the club.|그는 동아리의 후배 회원이다.
+just|방금, 단지|1|I [just] finished my homework.|나는 방금 숙제를 끝냈다.
+kangaroo|캥거루|2|[Kangaroos] live in Australia.|캥거루는 호주에 산다.
+keep|유지하다, 계속 ~하다, 보관하다|1|[Keep] the door closed.|문을 닫아 두어라.
+key|열쇠; 핵심의|1|I lost my [key].|나는 열쇠를 잃어버렸다.
+kick|차다|1|He [kicked] the ball into the goal.|그는 공을 차서 골에 넣었다.
+kid|아이|1|The [kids] are playing in the park.|아이들이 공원에서 놀고 있다.
+kill|죽이다|2|The hunter [killed] a deer.|사냥꾼이 사슴을 죽였다.
+kind|친절한; 종류|1|She is [kind] to everyone.|그녀는 모든 사람에게 친절하다.
+kindergarten|유치원|2|My little brother goes to [kindergarten].|내 남동생은 유치원에 다닌다.
+kindness|친절|3|Thank you for your [kindness].|친절에 감사드립니다.
+king|왕|1|The [king] lived in a big castle.|왕은 큰 성에 살았다.
+kitchen|부엌|1|Mom is cooking in the [kitchen].|엄마는 부엌에서 요리하고 계신다.
+kite|연|1|We flew [kites] by the river.|우리는 강가에서 연을 날렸다.
+knee|무릎|2|I fell and hurt my [knee].|나는 넘어져서 무릎을 다쳤다.
+knife|칼|1|Be careful with that [knife].|그 칼 조심해.
+knock|두드리다, 노크하다|2|Please [knock] before you come in.|들어오기 전에 노크해 주세요.
+know|알다|1|Do you [know] her name?|너는 그녀의 이름을 아니?
+knowledge|지식|3|Reading books increases your [knowledge].|책을 읽으면 지식이 늘어난다.
+koala|코알라|2|[Koalas] sleep about 20 hours a day.|코알라는 하루에 약 20시간을 잔다.
+lab|실험실|2|We did an experiment in the science [lab].|우리는 과학실에서 실험을 했다.
+label|상표, 라벨|3|Read the [label] before you buy food.|음식을 사기 전에 라벨을 읽어라.
+lack|부족; ~이 부족하다|3|He failed because of a [lack] of practice.|그는 연습 부족으로 실패했다.
+ladder|사다리|3|He climbed the [ladder] to fix the roof.|그는 지붕을 고치려고 사다리를 올라갔다.
+lady|숙녀, 여성|1|The [lady] in the red hat is my teacher.|빨간 모자를 쓴 여성분이 우리 선생님이시다.
+lake|호수|1|We went fishing at the [lake].|우리는 호수로 낚시하러 갔다.
+lamp|램프, 전등|2|Turn on the [lamp], please.|램프 좀 켜 주세요.
+land|땅, 육지; 착륙하다|2|The plane [landed] at Incheon.|비행기가 인천에 착륙했다.
+landmark|랜드마크, 주요 지형지물|3|Namsan Tower is a famous [landmark] in Seoul.|남산타워는 서울의 유명한 랜드마크이다.
+language|언어|1|How many [languages] can you speak?|너는 몇 개의 언어를 할 수 있니?
+laptop|노트북 컴퓨터|2|I do my homework on my [laptop].|나는 노트북으로 숙제를 한다.
+large|큰, 넓은|1|They live in a [large] house.|그들은 큰 집에 산다.
+last|마지막의, 지난; 지속되다|1|I saw him [last] week.|나는 지난주에 그를 보았다.
+late|늦은, 늦게|1|Don't be [late] for school.|학교에 늦지 마라.
+lately|최근에|3|Have you seen Mina [lately]?|최근에 미나 본 적 있니?
+later|나중에|1|See you [later].|나중에 보자.
+laugh|웃다|1|His jokes always make me [laugh].|그의 농담은 항상 나를 웃게 한다.
+laundry|세탁물, 빨래|3|I do the [laundry] on Saturdays.|나는 토요일마다 빨래를 한다.
+law|법|3|Everyone must obey the [law].|모든 사람은 법을 지켜야 한다.
+lawyer|변호사|2|My aunt is a [lawyer].|우리 이모는 변호사이다.
+lay|놓다, 눕히다; (알을) 낳다|3|Hens [lay] eggs.|암탉은 알을 낳는다.
+lazy|게으른|1|Don't be so [lazy]!|그렇게 게으름 피우지 마!
+lead|이끌다|3|She will [lead] the team.|그녀가 팀을 이끌 것이다.
+leader|지도자, 리더|2|He is a good [leader].|그는 훌륭한 지도자이다.
+leaf|나뭇잎|1|A [leaf] fell from the tree.|나뭇잎 하나가 나무에서 떨어졌다.
+learn|배우다|1|I want to [learn] to swim.|나는 수영을 배우고 싶다.
+least|가장 적은, 최소|3|You should sleep at [least] eight hours.|너는 적어도 8시간은 자야 한다.
+leave|떠나다, 남겨 두다|1|What time does the bus [leave]?|버스는 몇 시에 떠나니?
+left|왼쪽의, 왼쪽|1|Turn [left] at the bank.|은행에서 왼쪽으로 도세요.
+leftover|남은 음식|3|We had [leftovers] for lunch.|우리는 점심으로 남은 음식을 먹었다.
+leg|다리|1|A spider has eight [legs].|거미는 다리가 여덟 개이다.
+legend|전설|3|The [legend] says a dragon lived in the lake.|전설에 따르면 그 호수에 용이 살았다고 한다.
+leisure|여가|3|What do you do in your [leisure] time?|너는 여가 시간에 무엇을 하니?
+lemon|레몬|1|I'd like tea with [lemon].|레몬을 넣은 차로 주세요.
+lend|빌려주다|2|Can you [lend] me your umbrella?|우산 좀 빌려줄래?
+less|더 적은|2|You should eat [less] sugar.|너는 설탕을 덜 먹어야 한다.
+lesson|수업, 교훈|1|I have a piano [lesson] today.|나는 오늘 피아노 수업이 있다.
+letter|편지, 글자|1|I wrote a [letter] to my grandmother.|나는 할머니께 편지를 썼다.
+lettuce|상추|3|Wrap the meat in [lettuce].|고기를 상추에 싸라.
+level|수준, 단계|2|This game has ten [levels].|이 게임은 열 단계가 있다.
+library|도서관|1|I often study in the [library].|나는 종종 도서관에서 공부한다.
+lie|거짓말; 거짓말하다; 눕다|2|Don't tell a [lie].|거짓말하지 마라.
+lie down|눕다|2|I need to [lie down] for a while.|나는 잠시 누워야겠다.
+life|삶, 생명|1|Thank you for saving my [life].|제 목숨을 구해 주셔서 감사합니다.
+lifeguard|인명 구조원|3|The [lifeguard] saved the boy.|인명 구조원이 그 소년을 구했다.
+lift|들어 올리다|2|Can you [lift] this box?|이 상자를 들 수 있니?
+light|빛, 불; 가벼운|1|Turn off the [light] when you leave.|나갈 때 불을 꺼라.
+lightning|번개|3|The tree was hit by [lightning].|그 나무는 번개에 맞았다.
+like|좋아하다; ~처럼|1|I [like] playing soccer.|나는 축구하는 것을 좋아한다.
+limit|한계, 제한|3|The speed [limit] here is 30 km/h.|이곳의 제한 속도는 시속 30킬로미터이다.
+line|선, 줄|1|Please wait in [line].|줄을 서서 기다려 주세요.
+lion|사자|1|The [lion] is the king of the jungle.|사자는 정글의 왕이다.
+lip|입술|2|My [lips] are dry in winter.|겨울에는 내 입술이 건조하다.
+list|목록|2|Make a shopping [list].|쇼핑 목록을 만들어라.
+listen|듣다|1|[Listen] to me carefully.|내 말을 잘 들어.
+little|작은, 조금|1|I can speak a [little] English.|나는 영어를 조금 할 수 있다.
+live|살다|1|Where do you [live]?|너는 어디에 사니?
+living room|거실|1|We watch TV in the [living room].|우리는 거실에서 TV를 본다.
+lizard|도마뱀|3|A [lizard] ran across the rock.|도마뱀 한 마리가 바위를 가로질러 달려갔다.
+local|지역의, 현지의|3|Try some [local] food when you travel.|여행할 때는 현지 음식을 먹어 봐라.
+lock|잠그다; 자물쇠|2|Did you [lock] the door?|문 잠갔니?
+locker|사물함|2|Put your books in your [locker].|책을 사물함에 넣어라.
+log|통나무|3|We sat on a [log] by the fire.|우리는 모닥불 옆의 통나무에 앉았다.
+lonely|외로운|2|He felt [lonely] in the new city.|그는 새 도시에서 외로움을 느꼈다.
+long|긴, 오래|1|She has [long] hair.|그녀는 머리가 길다.
+look|보다; ~해 보이다|1|[Look] at the sky!|하늘 좀 봐!
+loose|헐렁한, 느슨한|3|These pants are too [loose].|이 바지는 너무 헐렁하다.
+lose|잃어버리다, 지다|1|Don't [lose] your ticket.|표를 잃어버리지 마라.
+loss|손실, 분실|3|The team had three [losses] in a row.|그 팀은 3연패를 당했다.
+lot|많음|1|I have a [lot] of friends.|나는 친구가 많다.
+loud|시끄러운, 큰 소리의|1|The music is too [loud].|음악이 너무 시끄럽다.
+loudly|큰 소리로|2|Don't talk [loudly] on the bus.|버스에서 큰 소리로 이야기하지 마라.
+love|사랑; 사랑하다|1|I [love] my family.|나는 우리 가족을 사랑한다.
+lovely|사랑스러운, 아름다운|2|What a [lovely] day!|정말 멋진 날이구나!
+low|낮은|1|The table is too [low].|그 탁자는 너무 낮다.
+luck|운, 행운|2|Good [luck] on your test!|시험 잘 봐!
+lucky|운이 좋은|1|I was [lucky] to win the prize.|나는 운 좋게 상을 탔다.
+luggage|짐, 수하물|3|Don't leave your [luggage] unattended.|짐을 방치하지 마세요.
+lunch|점심 식사|1|What did you have for [lunch]?|점심으로 뭐 먹었니?
+lung|폐|3|Smoking damages your [lungs].|흡연은 폐를 손상시킨다.
+machine|기계|2|This [machine] makes coffee.|이 기계는 커피를 만든다.
+mad|화난, 미친|2|My mom was [mad] at me.|엄마가 나에게 화가 나셨다.
+magazine|잡지|2|I read a fashion [magazine].|나는 패션 잡지를 읽었다.
+magic|마법, 마술|1|The man showed us a [magic] trick.|그 남자가 우리에게 마술을 보여 주었다.
+magnet|자석|3|A [magnet] can pick up paper clips.|자석은 클립을 끌어당길 수 있다.
+mail|우편, 우편물|2|Did I get any [mail] today?|오늘 나한테 우편물 온 거 있어?
+mailbox|우편함|2|There's a letter in the [mailbox].|우편함에 편지가 있다.
+main|주된, 주요한|2|What is the [main] idea of the story?|그 이야기의 주제는 무엇이니?
+major|주요한; 전공|3|Traffic is a [major] problem in big cities.|교통은 대도시의 주요 문제이다.
+make|만들다|1|Let's [make] a cake together.|함께 케이크를 만들자.
+makeup|화장|3|She doesn't wear [makeup].|그녀는 화장을 하지 않는다.
+male|남성의, 수컷|3|The [male] bird has bright feathers.|수컷 새는 화려한 깃털을 가지고 있다.
+mall|쇼핑몰|1|Let's go shopping at the [mall].|쇼핑몰에 쇼핑하러 가자.
+man|남자, 사람|1|The [man] is my uncle.|그 남자는 우리 삼촌이다.
+manage|관리하다, 해내다|3|She [manages] a small hotel.|그녀는 작은 호텔을 운영한다.
+mango|망고|2|[Mangoes] grow in hot countries.|망고는 더운 나라에서 자란다.
+manner|방식; (복수) 예절|3|It's bad [manners] to talk with your mouth full.|입에 음식을 넣고 말하는 것은 나쁜 예절이다.
+many|많은|1|How [many] books do you have?|너는 책을 몇 권 가지고 있니?
+map|지도|1|Let's look at the [map].|지도를 보자.
+marathon|마라톤|3|He ran a [marathon] last year.|그는 작년에 마라톤을 뛰었다.
+mark|표시; 표시하다|2|[Mark] the right answer with a circle.|정답에 동그라미로 표시해라.
+market|시장|1|We bought fruit at the [market].|우리는 시장에서 과일을 샀다.
+marry|결혼하다|2|My aunt will [marry] next month.|우리 이모는 다음 달에 결혼하신다.
+mask|가면, 마스크|2|Wear a [mask] when the air is bad.|공기가 나쁠 때는 마스크를 써라.
+master|주인, 대가; 숙달하다|3|It takes years to [master] a language.|한 언어를 완전히 익히는 데는 수년이 걸린다.
+match|경기, 성냥; 어울리다|2|We won the soccer [match].|우리는 축구 경기에서 이겼다.
+material|재료, 자료|3|What [material] is this bag made of?|이 가방은 무슨 재료로 만들어졌니?
+math|수학|1|[Math] is my favorite subject.|수학은 내가 가장 좋아하는 과목이다.
+matter|문제; 중요하다|2|What's the [matter] with you?|무슨 일 있니?
+maybe|아마도|1|[Maybe] it will rain tomorrow.|아마 내일 비가 올 거야.
+meal|식사|2|Brush your teeth after every [meal].|매 식사 후에 이를 닦아라.
+mean|의미하다; 못된|2|What does this word [mean]?|이 단어는 무슨 뜻이니?
+meaning|의미, 뜻|2|Do you know the [meaning] of this word?|이 단어의 뜻을 아니?
+measure|측정하다, 재다|3|[Measure] the length of the desk.|책상의 길이를 재어 보아라.
+meat|고기|1|I don't eat much [meat].|나는 고기를 많이 먹지 않는다.
+medal|메달|2|She won a gold [medal] at the Olympics.|그녀는 올림픽에서 금메달을 땄다.
+medicine|약, 의학|2|Take this [medicine] three times a day.|이 약을 하루에 세 번 먹어라.
+meet|만나다|1|Nice to [meet] you.|만나서 반가워요.
+meeting|회의, 모임|2|The [meeting] starts at 3 p.m.|회의는 오후 3시에 시작한다.
+melt|녹다|2|The snow [melted] in the sun.|눈이 햇볕에 녹았다.
+member|구성원, 회원|2|He is a [member] of the soccer club.|그는 축구부의 회원이다.
+memory|기억, 추억|2|I have good [memories] of my childhood.|나는 어린 시절의 좋은 추억이 있다.
+mention|언급하다|3|Don't [mention] it to anyone.|그 일을 아무에게도 말하지 마.
+menu|메뉴, 차림표|1|Can I see the [menu], please?|메뉴판 좀 볼 수 있을까요?
+mess|엉망인 상태|3|Your room is a [mess]!|네 방은 엉망이구나!
+message|메시지, 전갈|1|Can I leave a [message]?|메시지를 남겨도 될까요?
+metal|금속|3|This box is made of [metal].|이 상자는 금속으로 만들어졌다.
+method|방법|3|This is a new teaching [method].|이것은 새로운 교수법이다.
+microwave|전자레인지|3|Heat the soup in the [microwave].|수프를 전자레인지에 데워라.
+middle|중앙, 가운데|1|Stand in the [middle] of the line.|줄 가운데에 서라.
+midnight|자정, 한밤중|2|I went to bed at [midnight].|나는 자정에 잠자리에 들었다.
+might|~일지도 모른다|2|It [might] snow tonight.|오늘 밤에 눈이 올지도 모른다.
+mild|온화한, 순한|3|The weather is [mild] today.|오늘은 날씨가 온화하다.
+milk|우유|1|I drink a glass of [milk] every morning.|나는 매일 아침 우유 한 잔을 마신다.
+million|100만|2|The city has ten [million] people.|그 도시에는 천만 명이 산다.
+mind|마음, 정신; 꺼리다|2|Do you [mind] if I open the window?|창문을 열어도 될까요?
+minute|분, 잠깐|1|Wait a [minute], please.|잠깐만 기다려 주세요.
+mirror|거울|2|She looked at herself in the [mirror].|그녀는 거울에 비친 자신을 보았다.
+miss|그리워하다, 놓치다|1|I [miss] my old friends.|나는 옛 친구들이 그립다.
+mission|임무|3|The astronauts completed their [mission].|우주 비행사들은 임무를 완수했다.
+mistake|실수|1|Everyone makes [mistakes].|누구나 실수를 한다.
+mix|섞다|2|[Mix] the flour and sugar together.|밀가루와 설탕을 함께 섞어라.
+model|모델, 모형|2|He made a [model] airplane.|그는 모형 비행기를 만들었다.
+modern|현대의|2|I like [modern] art.|나는 현대 미술을 좋아한다.
+mom|엄마|1|My [mom] is a nurse.|우리 엄마는 간호사이시다.
+moment|순간, 잠깐|2|Just a [moment], please.|잠시만 기다려 주세요.
+money|돈|1|I saved [money] to buy a bike.|나는 자전거를 사려고 돈을 모았다.
+monkey|원숭이|1|The [monkey] is eating a banana.|원숭이가 바나나를 먹고 있다.
+monster|괴물|2|The movie is about a sea [monster].|그 영화는 바다 괴물에 관한 것이다.
+month|달, 월|1|There are twelve [months] in a year.|1년은 12달이다.
+monument|기념물, 기념비|3|The [monument] was built to remember the war.|그 기념비는 전쟁을 기억하기 위해 세워졌다.
+mood|기분, 분위기|3|I'm in a good [mood] today.|나는 오늘 기분이 좋다.
+moon|달|1|The [moon] is bright tonight.|오늘 밤은 달이 밝다.
+more|더 많은, 더|1|Can I have [more] juice?|주스 더 마셔도 돼요?
+morning|아침|1|Good [morning], everyone!|모두 좋은 아침이에요!
+mosquito|모기|3|A [mosquito] bit me last night.|어젯밤 모기가 나를 물었다.
+most|가장 많은, 대부분|1|[Most] students like music.|대부분의 학생들은 음악을 좋아한다.
+mostly|주로, 대부분|3|The audience was [mostly] young people.|관객은 대부분 젊은 사람들이었다.
+motorcycle|오토바이|2|He rides a [motorcycle] to work.|그는 오토바이를 타고 출근한다.
+mountain|산|1|We climbed the [mountain] together.|우리는 함께 산에 올랐다.
+mouse|쥐, (컴퓨터) 마우스|1|The cat is chasing a [mouse].|고양이가 쥐를 쫓고 있다.
+mouth|입|1|Open your [mouth] wide.|입을 크게 벌리세요.
+move|움직이다, 이사하다|1|We [moved] to Seoul last year.|우리는 작년에 서울로 이사했다.
+movement|움직임, 운동|3|The dancer's [movements] were beautiful.|그 무용수의 움직임은 아름다웠다.
+movie|영화|1|Let's go see a [movie].|영화 보러 가자.
+much|많은, 많이|1|How [much] is this?|이거 얼마예요?
+mud|진흙|3|My shoes are covered in [mud].|내 신발이 진흙투성이다.
+museum|박물관|1|We visited the history [museum].|우리는 역사박물관을 방문했다.
+mushroom|버섯|2|I don't like [mushrooms] on my pizza.|나는 피자에 올라간 버섯을 좋아하지 않는다.
+music|음악|1|I listen to [music] every day.|나는 매일 음악을 듣는다.
+musical|음악의; 뮤지컬|2|We went to see a [musical].|우리는 뮤지컬을 보러 갔다.
+musician|음악가|2|My uncle is a [musician].|우리 삼촌은 음악가이다.
+must|~해야 한다|1|You [must] wear a seat belt.|안전벨트를 매야 한다.
+mystery|수수께끼, 미스터리|3|How the pyramids were built is still a [mystery].|피라미드가 어떻게 지어졌는지는 아직도 수수께끼이다.
+nail|손톱; 못|3|Don't bite your [nails].|손톱을 물어뜯지 마라.
+name|이름|1|What's your [name]?|이름이 뭐니?
+napkin|냅킨|2|Can I have a [napkin], please?|냅킨 하나 주시겠어요?
+narrow|좁은|2|The street is very [narrow].|그 길은 매우 좁다.
+nation|국가, 국민|3|The whole [nation] watched the game.|온 국민이 그 경기를 지켜보았다.
+national|국가의, 국립의|2|We visited a [national] park.|우리는 국립공원을 방문했다.
+native|태어난 곳의, 토박이의|3|English is her [native] language.|영어는 그녀의 모국어이다.
+natural|자연의, 자연스러운|2|I like [natural] light in my room.|나는 내 방에 들어오는 자연광이 좋다.
+nature|자연|1|We should protect [nature].|우리는 자연을 보호해야 한다.
+near|가까운, 가까이|1|Is there a bank [near] here?|이 근처에 은행이 있나요?
+nearby|근처의, 근처에|3|There is a park [nearby].|근처에 공원이 하나 있다.
+nearly|거의|3|It's [nearly] ten o'clock.|거의 10시가 다 되었다.
+necessary|필요한|3|Water is [necessary] for life.|물은 생명에 필요하다.
+neck|목|2|A giraffe has a long [neck].|기린은 목이 길다.
+necklace|목걸이|2|She is wearing a pearl [necklace].|그녀는 진주 목걸이를 하고 있다.
+need|필요하다|1|I [need] your help.|나는 너의 도움이 필요해.
+needle|바늘|3|She sewed the button with a [needle].|그녀는 바늘로 단추를 달았다.
+negative|부정적인|3|Don't be so [negative].|그렇게 부정적으로 생각하지 마.
+neighbor|이웃|1|Our [neighbors] are very friendly.|우리 이웃들은 매우 친절하다.
+neither|어느 쪽도 ~ 아니다|3|[Neither] of them came to the party.|그들 중 아무도 파티에 오지 않았다.
+nephew|조카(남자)|3|My [nephew] is five years old.|내 조카는 다섯 살이다.
+nervous|긴장한, 불안해하는|2|I was [nervous] before the speech.|나는 발표 전에 긴장했다.
+nest|둥지|2|There are three eggs in the [nest].|둥지에 알이 세 개 있다.
+net|그물, 망|3|The fishermen pulled in their [nets].|어부들이 그물을 끌어올렸다.
+never|결코 ~ 않다|1|I will [never] forget you.|나는 너를 절대 잊지 않을 거야.
+new|새로운|1|I bought a [new] bag.|나는 새 가방을 샀다.
+news|소식, 뉴스|1|I have good [news] for you.|너에게 좋은 소식이 있어.
+newspaper|신문|1|My dad reads the [newspaper] every morning.|아빠는 매일 아침 신문을 읽으신다.
+next|다음의|1|See you [next] week.|다음 주에 보자.
+nice|좋은, 친절한|1|Have a [nice] weekend!|좋은 주말 보내!
+nickname|별명|2|My [nickname] is "Rabbit."|내 별명은 '토끼'이다.
+niece|조카(여자)|3|My [niece] loves to draw.|내 조카딸은 그림 그리는 것을 아주 좋아한다.
+night|밤|1|I sleep eight hours every [night].|나는 매일 밤 여덟 시간을 잔다.
+nightmare|악몽|3|I had a [nightmare] last night.|나는 어젯밤 악몽을 꾸었다.
+nobody|아무도 ~ 않다|2|[Nobody] knows the answer.|아무도 정답을 모른다.
+nod|고개를 끄덕이다|3|She [nodded] and smiled.|그녀는 고개를 끄덕이며 미소 지었다.
+noise|소음|2|Don't make any [noise].|떠들지 마라.
+noisy|시끄러운|2|The classroom is too [noisy].|교실이 너무 시끄럽다.
+none|아무도(하나도) ~ 않다|3|[None] of us knew the answer.|우리 중 아무도 답을 몰랐다.
+noodle|국수, 면|1|I had [noodles] for lunch.|나는 점심으로 국수를 먹었다.
+noon|정오, 낮 12시|2|Let's have lunch at [noon].|정오에 점심을 먹자.
+normal|보통의, 정상적인|3|It's [normal] to feel nervous before a test.|시험 전에 긴장하는 것은 정상이다.
+north|북쪽|1|Birds fly [north] in spring.|새들은 봄에 북쪽으로 날아간다.
+nose|코|1|An elephant has a long [nose].|코끼리는 코가 길다.
+note|메모, 쪽지; 음표|2|I left a [note] on the table.|나는 탁자 위에 쪽지를 남겼다.
+notebook|공책, 노트북|1|Write it down in your [notebook].|그것을 공책에 적어라.
+nothing|아무것도 ~ 않다|1|There is [nothing] in the box.|상자 안에는 아무것도 없다.
+notice|알아차리다; 공지|3|Did you [notice] anything strange?|이상한 점을 알아차렸니?
+novel|소설|3|I'm reading a [novel] by Hwang Sun-mi.|나는 황선미 작가의 소설을 읽고 있다.
+now|지금|1|I'm busy right [now].|나는 지금 바쁘다.
+number|숫자, 번호|1|What's your phone [number]?|네 전화번호가 뭐니?
+nurse|간호사|1|The [nurse] took my temperature.|간호사가 내 체온을 쟀다.
+nut|견과|3|Squirrels eat [nuts].|다람쥐는 견과류를 먹는다.
+nutrient|영양소|3|Vegetables are full of [nutrients].|채소에는 영양소가 가득하다.
+o'clock|~시(정각)|1|It's seven [o'clock].|7시 정각이다.
+obey|따르다, 복종하다|3|You must [obey] the school rules.|너는 교칙을 따라야 한다.
+object|물건, 물체|3|What is that strange [object]?|저 이상한 물체는 뭐니?
+ocean|대양, 바다|1|Whales live in the [ocean].|고래는 바다에 산다.
+octopus|문어|2|An [octopus] has eight arms.|문어는 다리가 여덟 개이다.
+offer|제안하다, 제공하다; 제안|3|He [offered] to help me.|그는 나를 도와주겠다고 제안했다.
+office|사무실|1|My mom works in an [office].|엄마는 사무실에서 일하신다.
+officer|장교, 경찰관|3|The police [officer] helped the lost child.|경찰관이 길 잃은 아이를 도와주었다.
+often|자주, 종종|1|I [often] go to the library.|나는 자주 도서관에 간다.
+oil|기름, 석유|2|Fry the onions in a little [oil].|양파를 기름을 조금 넣고 볶아라.
+old|늙은, 오래된|1|How [old] are you?|너는 몇 살이니?
+once|한 번; 한때|2|I go swimming [once] a week.|나는 일주일에 한 번 수영하러 간다.
+onion|양파|2|Cutting [onions] makes me cry.|양파를 썰면 눈물이 난다.
+online|온라인의, 온라인으로|2|I bought the shoes [online].|나는 그 신발을 온라인으로 샀다.
+only|오직, 유일한|1|He is my [only] brother.|그는 나의 하나뿐인 형이다.
+open|열다; 열린|1|Can you [open] the door?|문 좀 열어 줄래?
+opera|오페라|3|We went to the [opera] last night.|우리는 어젯밤 오페라를 보러 갔다.
+operation|수술, 작동|3|He had an [operation] on his knee.|그는 무릎 수술을 받았다.
+opinion|의견|2|What's your [opinion] on this?|이것에 대한 너의 의견은 무엇이니?
+opportunity|기회|3|This is a great [opportunity] for you.|이것은 너에게 좋은 기회이다.
+opposite|반대의; 맞은편에|3|"Hot" is the [opposite] of "cold."|'뜨거운'은 '차가운'의 반대말이다.
+or|또는|1|Do you want tea [or] coffee?|차를 원하니, 아니면 커피를 원하니?
+orange|오렌지; 주황색의|1|She is wearing an [orange] T-shirt.|그녀는 주황색 티셔츠를 입고 있다.
+orchestra|오케스트라, 관현악단|3|She plays the cello in the school [orchestra].|그녀는 학교 오케스트라에서 첼로를 연주한다.
+order|주문하다, 명령하다; 순서|2|Are you ready to [order]?|주문하시겠어요?
+ordinary|평범한|3|It was just an [ordinary] day.|그날은 그저 평범한 하루였다.
+organize|조직하다, 준비하다|3|We [organized] a party for our teacher.|우리는 선생님을 위한 파티를 준비했다.
+origin|기원, 유래|3|Do you know the [origin] of this word?|이 단어의 유래를 아니?
+other|다른|1|Do you have any [other] questions?|다른 질문 있나요?
+outdoor|야외의|2|I like [outdoor] activities.|나는 야외 활동을 좋아한다.
+outfit|옷, 복장|3|I love your [outfit] today!|오늘 네 옷차림 정말 멋지다!
+outside|밖에, 바깥|1|Let's play [outside].|밖에서 놀자.
+oven|오븐|2|Bake the cake in the [oven] for 30 minutes.|케이크를 오븐에 30분 동안 구워라.
+over|~ 위에, ~ 넘어; 끝난|1|The game is [over].|경기가 끝났다.
+overcome|극복하다|3|She [overcame] her fear of water.|그녀는 물에 대한 두려움을 극복했다.
+owl|올빼미|2|An [owl] can see well at night.|올빼미는 밤에 잘 볼 수 있다.
+own|자신의; 소유하다|2|I want my [own] room.|나는 내 방을 갖고 싶다.
+owner|주인, 소유자|3|Who is the [owner] of this dog?|이 개의 주인은 누구니?
+P.E.|체육|1|We have [P.E.] class on Monday.|우리는 월요일에 체육 수업이 있다.
+pack|싸다, 꾸리다|2|Did you [pack] your bag for the trip?|여행 가방 다 쌌니?
+package|소포, 꾸러미|3|A [package] arrived for you.|너에게 소포가 왔어.
+page|쪽, 페이지|1|Open your books to [page] 25.|책 25쪽을 펴세요.
+pain|고통, 통증|2|I have a [pain] in my back.|나는 허리가 아프다.
+paint|칠하다, 그리다; 페인트|1|Let's [paint] the wall blue.|벽을 파란색으로 칠하자.
+painter|화가|2|Picasso was a great [painter].|피카소는 위대한 화가였다.
+painting|그림|2|This [painting] is very old.|이 그림은 매우 오래되었다.
+pair|한 쌍, 한 켤레|2|I bought a [pair] of shoes.|나는 신발 한 켤레를 샀다.
+pajamas|잠옷|2|I put on my [pajamas] and went to bed.|나는 잠옷을 입고 잠자리에 들었다.
+palace|궁전|2|Gyeongbokgung is an old [palace].|경복궁은 오래된 궁궐이다.
+pale|창백한|3|You look [pale]. Are you okay?|너 창백해 보여. 괜찮니?
+pan|프라이팬|2|Heat the oil in a [pan].|프라이팬에 기름을 데워라.
+panda|판다|1|The [panda] is eating bamboo.|판다가 대나무를 먹고 있다.
+pants|바지|1|These [pants] are too long.|이 바지는 너무 길다.
+paper|종이|1|Write your name on the [paper].|종이에 이름을 써라.
+parade|퍼레이드, 행진|2|We watched the [parade] on the street.|우리는 거리에서 퍼레이드를 보았다.
+parent|부모|1|My [parents] are both doctors.|우리 부모님은 두 분 다 의사이시다.
+park|공원; 주차하다|1|Let's go to the [park].|공원에 가자.
+parrot|앵무새|2|The [parrot] can say "hello."|그 앵무새는 "hello"라고 말할 수 있다.
+part|부분, 역할|2|This is the best [part] of the movie.|이 부분이 영화에서 가장 좋은 부분이다.
+participate|참가하다|3|Everyone can [participate] in the event.|누구나 그 행사에 참가할 수 있다.
+partner|짝, 동반자|2|Work with your [partner].|짝과 함께 활동하세요.
+party|파티|1|We had a [party] for my birthday.|우리는 내 생일 파티를 열었다.
+pass|지나가다, 건네주다; 합격하다|2|Can you [pass] me the salt?|소금 좀 건네줄래?
+passenger|승객|3|The bus had only five [passengers].|그 버스에는 승객이 다섯 명뿐이었다.
+passport|여권|3|Don't forget your [passport].|여권 잊지 마.
+past|과거; 지나서|2|It's half [past] three.|3시 30분이다.
+path|길, 오솔길|3|We walked along a narrow [path].|우리는 좁은 오솔길을 따라 걸었다.
+patient|환자; 참을성 있는|3|Be [patient] with your little brother.|남동생에게 참을성 있게 대해라.
+pattern|무늬, 양식|3|I like the flower [pattern] on your dress.|네 원피스의 꽃무늬가 마음에 든다.
+pay|지불하다|2|I'll [pay] for lunch.|점심은 내가 낼게.
+peace|평화|2|We hope for world [peace].|우리는 세계 평화를 바란다.
+peaceful|평화로운|3|The village is quiet and [peaceful].|그 마을은 조용하고 평화롭다.
+peach|복숭아|2|This [peach] is sweet and juicy.|이 복숭아는 달고 즙이 많다.
+peanut|땅콩|2|I'm allergic to [peanuts].|나는 땅콩 알레르기가 있다.
+pear|배(과일)|2|Korean [pears] are big and sweet.|한국 배는 크고 달다.
+pebble|조약돌|3|We collected [pebbles] on the beach.|우리는 해변에서 조약돌을 주웠다.
+pencil|연필|1|Can I borrow your [pencil]?|네 연필 좀 빌려도 될까?
+penguin|펭귄|1|[Penguins] can't fly.|펭귄은 날 수 없다.
+people|사람들|1|Many [people] came to the concert.|많은 사람들이 콘서트에 왔다.
+pepper|후추, 고추|2|Add some salt and [pepper].|소금과 후추를 조금 넣어라.
+percent|퍼센트|3|Fifty [percent] of the students wear glasses.|학생의 50퍼센트가 안경을 쓴다.
+perfect|완벽한|2|Your English is [perfect]!|너의 영어는 완벽해!
+perform|공연하다, 수행하다|3|The band will [perform] at the festival.|그 밴드는 축제에서 공연할 것이다.
+performance|공연, 성과|3|Her [performance] was amazing.|그녀의 공연은 놀라웠다.
+perhaps|아마도|3|[Perhaps] he missed the bus.|아마도 그는 버스를 놓쳤을 것이다.
+period|기간, 시기; 마침표|3|We have a break after the third [period].|우리는 3교시 후에 쉬는 시간이 있다.
+person|사람|1|He is a nice [person].|그는 좋은 사람이다.
+personal|개인의|3|This is my [personal] opinion.|이것은 나의 개인적인 의견이다.
+pet|애완동물|1|Do you have a [pet]?|너는 애완동물을 기르니?
+pharmacy|약국|3|You can buy medicine at the [pharmacy].|약국에서 약을 살 수 있다.
+phone|전화, 휴대폰|1|Can I use your [phone]?|네 전화 좀 써도 될까?
+photo|사진|1|Let's take a [photo] together.|같이 사진 찍자.
+photographer|사진작가|3|The [photographer] took pictures of the wedding.|사진작가가 결혼식 사진을 찍었다.
+physical|신체의, 물리적인|3|[Physical] activity is good for your health.|신체 활동은 건강에 좋다.
+piano|피아노|1|She plays the [piano] very well.|그녀는 피아노를 아주 잘 친다.
+pick|고르다, 따다|2|[Pick] a card, any card.|아무 카드나 한 장 골라.
+picnic|소풍|1|Let's go on a [picnic] this Saturday.|이번 토요일에 소풍 가자.
+picture|그림, 사진|1|She drew a [picture] of her dog.|그녀는 자기 개의 그림을 그렸다.
+piece|조각|1|Can I have a [piece] of cake?|케이크 한 조각 먹어도 돼요?
+pig|돼지|1|The [pig] is rolling in the mud.|돼지가 진흙 속에서 뒹굴고 있다.
+pill|알약|3|Take one [pill] after each meal.|매 식사 후에 알약 하나를 드세요.
+pillow|베개|2|I need a softer [pillow].|나는 더 부드러운 베개가 필요하다.
+pilot|조종사|2|My dream is to be a [pilot].|내 꿈은 비행기 조종사가 되는 것이다.
+pine|소나무|3|[Pine] trees stay green all year.|소나무는 일 년 내내 푸르다.
+pink|분홍색의|1|She has a [pink] bag.|그녀는 분홍색 가방을 가지고 있다.
+pity|유감, 동정|3|What a [pity]!|정말 안됐다!
+pizza|피자|1|Let's order a [pizza].|피자 시키자.
+place|장소; 놓다|1|This is my favorite [place].|여기는 내가 가장 좋아하는 장소이다.
+plan|계획; 계획하다|1|What are your [plans] for the weekend?|주말 계획이 뭐니?
+planet|행성|2|Mars is the red [planet].|화성은 붉은 행성이다.
+plant|식물; 심다|1|Water the [plants] every day.|매일 식물에 물을 줘라.
+plastic|플라스틱|2|Use less [plastic] to save the earth.|지구를 지키기 위해 플라스틱을 덜 사용해라.
+plate|접시|2|Put the cake on a [plate].|케이크를 접시에 담아라.
+play|놀다, 경기하다, 연주하다; 연극|1|Let's [play] baseball.|야구하자.
+player|선수|1|He is a famous soccer [player].|그는 유명한 축구 선수이다.
+playground|놀이터, 운동장|1|The children are on the [playground].|아이들이 운동장에 있다.
+pleasant|즐거운, 쾌적한|3|We had a [pleasant] evening.|우리는 즐거운 저녁 시간을 보냈다.
+please|부디, 제발; 기쁘게 하다|1|Close the door, [please].|문 좀 닫아 주세요.
+pleased|기쁜|2|I'm [pleased] with my test score.|나는 내 시험 점수에 만족한다.
+pleasure|기쁨|3|It's my [pleasure] to help you.|도와드리게 되어 기쁩니다.
+plenty|많음, 풍부함|3|We have [plenty] of time.|우리는 시간이 충분하다.
+plum|자두|3|These [plums] are sweet.|이 자두들은 달다.
+pocket|주머니|1|I put the key in my [pocket].|나는 열쇠를 주머니에 넣었다.
+pocket money|용돈|2|I get [pocket money] every week.|나는 매주 용돈을 받는다.
+poem|시|2|She wrote a [poem] about spring.|그녀는 봄에 대한 시를 썼다.
+poet|시인|3|Yun Dong-ju is a famous Korean [poet].|윤동주는 유명한 한국 시인이다.
+point|요점, 점수; 가리키다|2|Our team got ten [points].|우리 팀은 10점을 얻었다.
+poison|독|3|Some mushrooms contain [poison].|어떤 버섯에는 독이 있다.
+polar bear|북극곰|2|[Polar bears] live in the Arctic.|북극곰은 북극에 산다.
+police|경찰|1|Call the [police]!|경찰을 불러!
+polite|예의 바른, 공손한|2|Be [polite] to older people.|어른들께 예의 바르게 행동해라.
+pollution|오염|3|Air [pollution] is a big problem.|대기 오염은 큰 문제이다.
+pond|연못|2|There are fish in the [pond].|연못에 물고기가 있다.
+pool|수영장|1|Let's go swimming in the [pool].|수영장에 수영하러 가자.
+poor|가난한, 불쌍한|1|They helped [poor] people.|그들은 가난한 사람들을 도왔다.
+popular|인기 있는|1|This song is very [popular].|이 노래는 아주 인기가 많다.
+population|인구|3|What is the [population] of Seoul?|서울의 인구는 얼마니?
+pork|돼지고기|2|I don't eat [pork].|나는 돼지고기를 먹지 않는다.
+port|항구|3|The ship arrived at the [port].|배가 항구에 도착했다.
+position|위치, 자리|3|What [position] do you play in soccer?|너는 축구에서 어느 포지션을 맡니?
+positive|긍정적인|3|Try to think [positive] thoughts.|긍정적인 생각을 하도록 노력해라.
+possible|가능한|2|Is it [possible] to finish by Friday?|금요일까지 끝내는 것이 가능하니?
+post|게시하다; 우편|3|She [posted] a photo on her blog.|그녀는 블로그에 사진을 올렸다.
+poster|포스터|2|We made a [poster] for the festival.|우리는 축제 포스터를 만들었다.
+pot|냄비, 화분|2|Boil water in a big [pot].|큰 냄비에 물을 끓여라.
+pot plant|화분 식물|3|There is a [pot plant] by the window.|창가에 화분이 하나 있다.
+potato|감자|1|I like baked [potatoes].|나는 구운 감자를 좋아한다.
+pour|붓다, 따르다|3|[Pour] the milk into the glass.|우유를 컵에 따라라.
+powder|가루, 분말|3|Mix the [powder] with water.|가루를 물에 섞어라.
+power|힘, 권력, 전력|2|Knowledge is [power].|아는 것이 힘이다.
+powerful|강력한|3|He gave a [powerful] speech.|그는 강렬한 연설을 했다.
+practice|연습; 연습하다|1|I [practice] the piano every day.|나는 매일 피아노를 연습한다.
+praise|칭찬; 칭찬하다|3|The teacher [praised] me for my hard work.|선생님께서 내가 열심히 한 것을 칭찬해 주셨다.
+pray|기도하다|3|We [prayed] for his safety.|우리는 그의 안전을 위해 기도했다.
+prefer|더 좋아하다|3|I [prefer] tea to coffee.|나는 커피보다 차를 더 좋아한다.
+prepare|준비하다|2|We need to [prepare] for the test.|우리는 시험 준비를 해야 한다.
+present|선물; 현재; 출석한|1|This is a [present] for you.|이건 너를 위한 선물이야.
+president|대통령, 회장|2|She is the class [president].|그녀는 반장이다.
+press|누르다|3|[Press] the button to start.|시작하려면 버튼을 누르세요.
+pressure|압력, 압박|3|I feel a lot of [pressure] before exams.|나는 시험 전에 압박감을 많이 느낀다.
+pretty|예쁜; 꽤|1|Your dress is very [pretty].|네 원피스 정말 예쁘다.
+prevent|막다, 예방하다|3|Washing your hands can [prevent] colds.|손을 씻으면 감기를 예방할 수 있다.
+price|가격|2|The [price] of this book is 10,000 won.|이 책의 가격은 만 원이다.
+pride|자부심|3|She takes [pride] in her work.|그녀는 자신의 일에 자부심을 가지고 있다.
+prince|왕자|1|The [prince] married the princess.|왕자는 공주와 결혼했다.
+princess|공주|1|The [princess] lived in a tall tower.|공주는 높은 탑에 살았다.
+principal|교장|2|Our [principal] gave a speech.|교장 선생님께서 연설을 하셨다.
+print|인쇄하다|2|Can you [print] this page?|이 페이지 좀 인쇄해 줄래?
+prison|감옥|3|The thief was sent to [prison].|그 도둑은 감옥에 보내졌다.
+private|사적인, 개인의|3|This is a [private] beach.|이곳은 개인 소유 해변이다.
+prize|상, 상품|1|She won first [prize] in the contest.|그녀는 대회에서 1등상을 탔다.
+probably|아마|2|It will [probably] rain tomorrow.|내일은 아마 비가 올 것이다.
+problem|문제|1|Can you solve this [problem]?|이 문제를 풀 수 있니?
+produce|생산하다|3|This factory [produces] cars.|이 공장은 자동차를 생산한다.
+product|제품, 상품|3|This store sells local [products].|이 가게는 지역 특산품을 판다.
+professor|교수|3|My uncle is a university [professor].|우리 삼촌은 대학 교수이다.
+program|프로그램|2|What's your favorite TV [program]?|네가 가장 좋아하는 TV 프로그램은 뭐니?
+progress|진보, 진행|3|You are making good [progress] in English.|너는 영어 실력이 많이 늘고 있다.
+project|프로젝트, 과제|2|We are working on a group [project].|우리는 모둠 과제를 하고 있다.
+promise|약속; 약속하다|1|I [promise] I'll be on time.|제시간에 오겠다고 약속할게.
+pronounce|발음하다|3|How do you [pronounce] this word?|이 단어는 어떻게 발음하니?
+protect|보호하다|2|We must [protect] the animals.|우리는 동물들을 보호해야 한다.
+proud|자랑스러운|2|I'm [proud] of you.|나는 네가 자랑스러워.
+prove|증명하다|3|Can you [prove] it?|그것을 증명할 수 있니?
+provide|제공하다|3|The school [provides] lunch for students.|학교는 학생들에게 점심을 제공한다.
+public|공공의, 대중의|2|Don't talk loudly in [public] places.|공공장소에서 큰 소리로 말하지 마라.
+pull|당기다|1|[Pull] the door to open it.|문을 열려면 당기세요.
+pumpkin|호박|2|We carved a [pumpkin] for Halloween.|우리는 핼러윈을 위해 호박을 조각했다.
+punish|벌주다|3|The teacher didn't [punish] him.|선생님은 그를 벌주지 않으셨다.
+pupil|학생, 제자|3|The teacher has thirty [pupils] in her class.|그 선생님 반에는 학생이 30명 있다.
+puppet|꼭두각시, 인형|3|The children enjoyed the [puppet] show.|아이들은 인형극을 즐겁게 보았다.
+puppy|강아지|1|The [puppy] is wagging its tail.|강아지가 꼬리를 흔들고 있다.
+purple|보라색의|1|She likes [purple] flowers.|그녀는 보라색 꽃을 좋아한다.
+purpose|목적|3|What is the [purpose] of your visit?|방문 목적이 무엇입니까?
+purse|지갑, 핸드백|3|She took some money out of her [purse].|그녀는 지갑에서 돈을 조금 꺼냈다.
+push|밀다|1|Don't [push] me!|나를 밀지 마!
+put|놓다, 두다|1|[Put] your bag on the chair.|가방을 의자 위에 놓아라.
+puzzle|퍼즐, 수수께끼|2|I like doing jigsaw [puzzles].|나는 직소 퍼즐 맞추는 것을 좋아한다.
+pyramid|피라미드|3|We saw the [pyramids] in Egypt.|우리는 이집트에서 피라미드를 보았다.
+quality|질, 품질|3|This bag is of high [quality].|이 가방은 품질이 좋다.
+quarrel|말다툼하다|3|The two sisters often [quarrel].|그 두 자매는 자주 말다툼을 한다.
+quarter|4분의 1, 15분|3|It's a [quarter] past five.|5시 15분이다.
+queen|여왕|1|The [queen] wore a golden crown.|여왕은 금관을 쓰고 있었다.
+question|질문|1|May I ask a [question]?|질문 하나 해도 될까요?
+quick|빠른|1|He gave a [quick] answer.|그는 빠르게 대답했다.
+quickly|빨리|1|Come here [quickly]!|빨리 이리 와!
+quiet|조용한|1|Please be [quiet] in the library.|도서관에서는 조용히 해 주세요.
+quietly|조용히|2|She closed the door [quietly].|그녀는 조용히 문을 닫았다.
+quit|그만두다|3|My dad [quit] smoking last year.|아빠는 작년에 담배를 끊으셨다.
+quite|꽤, 상당히|2|The test was [quite] easy.|그 시험은 꽤 쉬웠다.
+quiz|퀴즈, 간단한 시험|1|We have a vocabulary [quiz] today.|오늘 단어 퀴즈가 있다.
+rabbit|토끼|1|The [rabbit] is eating a carrot.|토끼가 당근을 먹고 있다.
+race|경주; 인종|2|He won the 100-meter [race].|그는 100미터 경주에서 이겼다.
+radio|라디오|1|I listen to the [radio] in the car.|나는 차 안에서 라디오를 듣는다.
+rain|비; 비가 오다|1|It will [rain] tomorrow.|내일 비가 올 것이다.
+rainbow|무지개|1|Look at the [rainbow] in the sky!|하늘에 무지개 좀 봐!
+raincoat|비옷|2|Wear a [raincoat] today.|오늘은 비옷을 입어라.
+rainy|비가 오는|1|I stay home on [rainy] days.|나는 비 오는 날에는 집에 있다.
+raise|들어 올리다, 기르다|2|[Raise] your hand if you have a question.|질문이 있으면 손을 드세요.
+rapid|빠른|3|The city saw [rapid] growth.|그 도시는 빠르게 성장했다.
+rare|드문, 희귀한|3|This is a [rare] bird.|이것은 희귀한 새이다.
+rarely|좀처럼 ~ 않는|3|He [rarely] eats breakfast.|그는 좀처럼 아침을 먹지 않는다.
+rather|오히려, 꽤|3|I'd [rather] stay home tonight.|나는 오늘 밤 차라리 집에 있겠다.
+raw|날것의|3|Do you eat [raw] fish?|너는 생선회를 먹니?
+reach|도착하다, 닿다|2|I can't [reach] the top shelf.|나는 맨 위 선반에 손이 닿지 않는다.
+react|반응하다|3|How did he [react] to the news?|그는 그 소식에 어떻게 반응했니?
+read|읽다|1|I like to [read] comic books.|나는 만화책 읽는 것을 좋아한다.
+ready|준비된|1|Are you [ready] to go?|갈 준비 됐니?
+real|진짜의, 실제의|1|Is that a [real] diamond?|그거 진짜 다이아몬드야?
+realize|깨닫다|3|I didn't [realize] it was so late.|나는 그렇게 늦은 줄 몰랐다.
+really|정말|1|I [really] like this song.|나는 이 노래가 정말 좋다.
+reason|이유|2|What's the [reason] for your absence?|결석한 이유가 무엇이니?
+receive|받다|2|Did you [receive] my letter?|내 편지 받았니?
+recent|최근의|3|Here are some [recent] photos.|여기 최근 사진들이 있다.
+recess|쉬는 시간|3|We play outside during [recess].|우리는 쉬는 시간에 밖에서 논다.
+recipe|요리법|3|Can you give me the [recipe] for this soup?|이 수프 요리법 좀 알려 줄래?
+recommend|추천하다|3|Can you [recommend] a good book?|좋은 책 한 권 추천해 줄래?
+record|기록; 기록하다, 녹음하다|3|He broke the world [record].|그는 세계 기록을 깼다.
+recycle|재활용하다|2|We [recycle] paper and cans.|우리는 종이와 캔을 재활용한다.
+reduce|줄이다|3|We should [reduce] food waste.|우리는 음식물 쓰레기를 줄여야 한다.
+refrigerator|냉장고|2|There's some juice in the [refrigerator].|냉장고에 주스가 좀 있어.
+refuse|거절하다|3|She [refused] to answer the question.|그녀는 질문에 대답하기를 거절했다.
+regret|후회하다; 후회|3|I [regret] saying that.|나는 그 말을 한 것을 후회한다.
+regular|규칙적인, 보통의|3|Get [regular] exercise.|규칙적으로 운동해라.
+reindeer|순록|3|Santa's sleigh is pulled by [reindeer].|산타의 썰매는 순록이 끈다.
+relative|친척|3|We visit our [relatives] on Chuseok.|우리는 추석에 친척들을 방문한다.
+relax|휴식을 취하다, 긴장을 풀다|2|Sit down and [relax].|앉아서 편히 쉬어.
+release|풀어 주다, 발표하다|3|The band will [release] a new album.|그 밴드는 새 앨범을 발표할 것이다.
+remember|기억하다|1|Do you [remember] my name?|내 이름 기억하니?
+remind|생각나게 하다|3|This song [reminds] me of my childhood.|이 노래는 나에게 어린 시절을 생각나게 한다.
+remote control|리모컨|3|Where is the [remote control]?|리모컨 어디 있어?
+remove|제거하다, 치우다|3|Please [remove] your shoes.|신발을 벗어 주세요.
+rent|빌리다, 임대하다; 집세|3|We [rented] bikes at the park.|우리는 공원에서 자전거를 빌렸다.
+repair|수리하다|3|The man is [repairing] the roof.|그 남자는 지붕을 수리하고 있다.
+repeat|반복하다|2|Please [repeat] after me.|저를 따라 하세요.
+reply|대답하다; 대답|3|He didn't [reply] to my message.|그는 내 메시지에 답장하지 않았다.
+report|보고서; 보고하다|2|I wrote a [report] on climate change.|나는 기후 변화에 대한 보고서를 썼다.
+reporter|기자|2|The [reporter] asked many questions.|그 기자는 많은 질문을 했다.
+rescue|구조하다; 구조|3|The firefighters [rescued] the cat.|소방관들이 고양이를 구조했다.
+research|연구; 조사하다|3|She is doing [research] on bees.|그녀는 벌에 대해 연구하고 있다.
+respect|존경하다; 존경|2|We should [respect] our elders.|우리는 어른을 공경해야 한다.
+responsible|책임이 있는|3|You are [responsible] for your actions.|너는 너의 행동에 책임이 있다.
+rest|휴식; 쉬다|1|You need some [rest].|너는 좀 쉬어야 해.
+restaurant|식당|1|Let's eat at a Chinese [restaurant].|중국 음식점에서 먹자.
+restroom|화장실|2|Excuse me, where's the [restroom]?|실례합니다, 화장실이 어디인가요?
+result|결과|2|I'm happy with the test [results].|나는 시험 결과에 만족한다.
+return|돌아오다, 돌려주다|2|Please [return] the book by Friday.|금요일까지 책을 반납해 주세요.
+review|복습하다; 검토, 평|2|Let's [review] what we learned today.|오늘 배운 것을 복습하자.
+reward|보상; 보상하다|3|He got a [reward] for finding the lost dog.|그는 잃어버린 개를 찾아 주어 보상을 받았다.
+rhythm|리듬|3|Clap your hands to the [rhythm].|리듬에 맞춰 손뼉을 쳐라.
+rice|쌀, 밥|1|Koreans eat [rice] every day.|한국인은 매일 밥을 먹는다.
+rich|부유한, 풍부한|1|He became [rich] and famous.|그는 부자가 되고 유명해졌다.
+ride|타다|1|Can you [ride] a bike?|너는 자전거를 탈 수 있니?
+right|오른쪽의; 옳은; 권리|1|Turn [right] at the corner.|모퉁이에서 오른쪽으로 도세요.
+ring|반지; 울리다|1|The phone is [ringing].|전화가 울리고 있다.
+rise|오르다, 뜨다|2|The sun [rises] in the east.|해는 동쪽에서 뜬다.
+risk|위험|3|Don't take any [risks].|어떤 위험도 무릅쓰지 마라.
+river|강|1|We swam in the [river].|우리는 강에서 수영했다.
+road|도로, 길|1|Be careful on the [road].|도로에서 조심해라.
+robot|로봇|1|This [robot] can clean the house.|이 로봇은 집을 청소할 수 있다.
+rock|바위, 돌|1|He sat on a big [rock].|그는 큰 바위에 앉았다.
+rocket|로켓|2|The [rocket] flew into space.|로켓이 우주로 날아갔다.
+role|역할|3|She played the main [role] in the play.|그녀는 연극에서 주인공 역할을 맡았다.
+roll|구르다, 굴리다|3|The ball [rolled] down the hill.|공이 언덕 아래로 굴러갔다.
+roof|지붕|2|There is a cat on the [roof].|지붕 위에 고양이가 있다.
+room|방; 공간|1|My [room] is on the second floor.|내 방은 2층에 있다.
+root|뿌리|3|The tree has deep [roots].|그 나무는 뿌리가 깊다.
+rope|밧줄|2|Hold the [rope] tightly.|밧줄을 꽉 잡아라.
+rose|장미|1|He gave her a red [rose].|그는 그녀에게 빨간 장미를 주었다.
+round|둥근|2|The earth is [round].|지구는 둥글다.
+route|길, 경로|3|What's the fastest [route] to the airport?|공항까지 가는 가장 빠른 길은 무엇이니?
+rub|문지르다|3|He [rubbed] his eyes.|그는 눈을 비볐다.
+rubber|고무|3|These boots are made of [rubber].|이 장화는 고무로 만들어졌다.
+rude|무례한|2|It's [rude] to talk with your mouth full.|입에 음식을 넣고 말하는 것은 무례하다.
+rule|규칙|1|You must follow the [rules].|너는 규칙을 따라야 한다.
+ruler|자; 통치자|2|Draw a line with a [ruler].|자를 대고 선을 그어라.
+run|달리다; 운영하다|1|I [run] every morning.|나는 매일 아침 달리기를 한다.
+rush|서두르다|3|Don't [rush]. We have time.|서두르지 마. 시간 있어.
+sad|슬픈|1|Why do you look so [sad]?|왜 그렇게 슬퍼 보이니?
+safe|안전한|1|It's not [safe] to swim here.|여기서 수영하는 것은 안전하지 않다.
+safety|안전|2|[Safety] comes first.|안전이 최우선이다.
+sail|항해하다|3|They [sailed] across the sea.|그들은 바다를 가로질러 항해했다.
+sailor|선원|3|The [sailor] saw land in the distance.|그 선원은 멀리 육지를 보았다.
+salad|샐러드|1|I'll have a green [salad].|저는 야채샐러드로 할게요.
+sale|판매, 할인 판매|2|These shoes are on [sale].|이 신발은 할인 중이다.
+salt|소금|1|Pass me the [salt], please.|소금 좀 건네주세요.
+same|같은|1|We are in the [same] class.|우리는 같은 반이다.
+sand|모래|1|The kids played in the [sand].|아이들은 모래에서 놀았다.
+sandwich|샌드위치|1|I made a [sandwich] for lunch.|나는 점심으로 샌드위치를 만들었다.
+satisfy|만족시키다|3|Nothing [satisfies] him.|그는 어떤 것에도 만족하지 않는다.
+sausage|소시지|2|I had [sausages] for breakfast.|나는 아침으로 소시지를 먹었다.
+save|구하다, 저축하다, 절약하다|1|We should [save] water.|우리는 물을 절약해야 한다.
+say|말하다|1|What did you [say]?|뭐라고 했니?
+scared|무서워하는|1|I'm [scared] of the dark.|나는 어둠이 무섭다.
+scarf|목도리, 스카프|2|My grandma knitted a [scarf] for me.|할머니께서 나에게 목도리를 떠 주셨다.
+scary|무서운|1|That movie was really [scary].|그 영화는 정말 무서웠다.
+scene|장면|3|This is my favorite [scene] in the movie.|이것은 그 영화에서 내가 가장 좋아하는 장면이다.
+schedule|일정, 시간표|2|What's your [schedule] for tomorrow?|내일 일정이 어떻게 되니?
+scholarship|장학금|3|She got a [scholarship] to study abroad.|그녀는 유학을 위한 장학금을 받았다.
+school|학교|1|I walk to [school] every day.|나는 매일 걸어서 학교에 간다.
+science|과학|1|I like [science] the most.|나는 과학을 가장 좋아한다.
+scientist|과학자|1|I want to be a [scientist].|나는 과학자가 되고 싶다.
+scissors|가위|2|Cut the paper with [scissors].|가위로 종이를 잘라라.
+score|점수; 득점하다|2|What was the final [score]?|최종 점수가 어떻게 됐니?
+scream|비명을 지르다|3|She [screamed] when she saw the snake.|그녀는 뱀을 보고 비명을 질렀다.
+screen|화면|2|Don't sit too close to the [screen].|화면에 너무 가까이 앉지 마라.
+sea|바다|1|We swam in the [sea].|우리는 바다에서 수영했다.
+seafood|해산물|2|Busan is famous for [seafood].|부산은 해산물로 유명하다.
+search|찾다, 검색하다|2|I [searched] the Internet for information.|나는 정보를 찾으려고 인터넷을 검색했다.
+seashell|조개껍데기|3|I found a pretty [seashell] on the beach.|나는 해변에서 예쁜 조개껍데기를 발견했다.
+season|계절|1|Which [season] do you like best?|너는 어느 계절을 가장 좋아하니?
+seat|자리, 좌석|1|Please take a [seat].|자리에 앉으세요.
+second|두 번째의; 초|1|This is my [second] visit to Busan.|이번이 나의 두 번째 부산 방문이다.
+secret|비밀|1|Can you keep a [secret]?|비밀 지킬 수 있니?
+section|부분, 구역|3|Read the first [section] of the book.|그 책의 첫 부분을 읽어라.
+see|보다|1|I can [see] the mountains from my room.|내 방에서 산이 보인다.
+seed|씨앗|2|We planted [seeds] in the garden.|우리는 정원에 씨앗을 심었다.
+seem|~처럼 보이다|2|You [seem] tired today.|너 오늘 피곤해 보인다.
+seesaw|시소|2|The children are playing on the [seesaw].|아이들이 시소를 타고 있다.
+select|선택하다|3|[Select] the correct answer.|정답을 선택하시오.
+sell|팔다|1|They [sell] fresh fruit at the market.|그들은 시장에서 신선한 과일을 판다.
+send|보내다|1|I'll [send] you a text message.|너에게 문자 메시지를 보낼게.
+senior|연장자; 상급생|3|My brother is a high school [senior].|우리 형은 고등학교 3학년이다.
+sense|감각; 느끼다|3|Dogs have a good [sense] of smell.|개는 후각이 뛰어나다.
+sentence|문장|2|Make a [sentence] with this word.|이 단어로 문장을 만들어 보아라.
+serious|진지한, 심각한|2|Are you [serious]?|진심이야?
+serve|제공하다, 시중들다|3|Breakfast is [served] from 7 to 9.|아침 식사는 7시부터 9시까지 제공된다.
+service|서비스, 봉사|3|The [service] at this restaurant is great.|이 식당의 서비스는 훌륭하다.
+set|놓다, 맞추다; 세트|2|I [set] my alarm for 6 a.m.|나는 알람을 오전 6시로 맞췄다.
+several|몇몇의|3|I've read the book [several] times.|나는 그 책을 여러 번 읽었다.
+sew|바느질하다|3|My grandma taught me how to [sew].|할머니께서 나에게 바느질하는 법을 가르쳐 주셨다.
+shade|그늘|3|Let's rest in the [shade].|그늘에서 쉬자.
+shadow|그림자|3|My [shadow] is long in the evening.|저녁에는 내 그림자가 길다.
+shake|흔들다|2|[Shake] the bottle before you open it.|병을 열기 전에 흔들어라.
+shall|~할까요|2|[Shall] we dance?|우리 춤출까요?
+shampoo|샴푸|2|I need to buy [shampoo].|나는 샴푸를 사야 한다.
+shape|모양|2|What [shape] is the moon tonight?|오늘 밤 달은 무슨 모양이니?
+share|나누다, 공유하다|1|Let's [share] the pizza.|피자를 나눠 먹자.
+shark|상어|2|A [shark] has sharp teeth.|상어는 날카로운 이빨을 가지고 있다.
+sharp|날카로운|2|Be careful. The knife is [sharp].|조심해. 칼이 날카로워.
+sheep|양|2|The farmer has many [sheep].|그 농부는 양이 많다.
+sheet|(종이) 한 장, 시트|3|Take a [sheet] of paper.|종이 한 장을 가져가라.
+shelf|선반|2|Put the books on the [shelf].|책을 선반에 올려놓아라.
+shell|껍질, 조개껍데기|3|A turtle has a hard [shell].|거북은 딱딱한 등껍질이 있다.
+shelter|보호소, 피난처|3|We adopted a dog from an animal [shelter].|우리는 동물 보호소에서 개를 입양했다.
+shine|빛나다|2|The stars [shine] at night.|별은 밤에 빛난다.
+ship|배|1|The [ship] sailed to America.|그 배는 미국으로 항해했다.
+shirt|셔츠|1|He is wearing a white [shirt].|그는 흰 셔츠를 입고 있다.
+shock|충격; 충격을 주다|3|The news came as a [shock] to us.|그 소식은 우리에게 충격이었다.
+shoe|신발|1|I need new [shoes].|나는 새 신발이 필요하다.
+shoot|쏘다, 슛하다|2|He [shot] the ball into the basket.|그는 공을 바구니에 슛했다.
+shop|가게; 쇼핑하다|1|I bought this at a gift [shop].|나는 이것을 기념품 가게에서 샀다.
+shopping|쇼핑|1|Let's go [shopping] this weekend.|이번 주말에 쇼핑하러 가자.
+shore|해안, 물가|3|We walked along the [shore].|우리는 해안을 따라 걸었다.
+short|짧은, 키가 작은|1|My sister has [short] hair.|내 여동생은 머리가 짧다.
+should|~해야 한다|1|You [should] go to bed early.|너는 일찍 자야 한다.
+shoulder|어깨|2|He put his hand on my [shoulder].|그가 내 어깨에 손을 얹었다.
+shout|소리치다|2|Don't [shout] at me.|나에게 소리치지 마.
+show|보여 주다; 쇼|1|Can you [show] me the way?|길을 알려 줄 수 있나요?
+shower|샤워; 소나기|1|I take a [shower] every morning.|나는 매일 아침 샤워를 한다.
+shut|닫다|2|[Shut] the door, please.|문 좀 닫아 주세요.
+shy|수줍어하는|1|She is [shy] with strangers.|그녀는 낯선 사람 앞에서 수줍어한다.
+sick|아픈|1|I was [sick] yesterday.|나는 어제 아팠다.
+side|쪽, 옆면|2|Walk on the right [side] of the road.|길의 오른쪽으로 걸어라.
+sidewalk|인도, 보도|3|Walk on the [sidewalk], not on the road.|차도 말고 인도로 걸어라.
+sight|시력, 광경|3|The sunset was a beautiful [sight].|그 일몰은 아름다운 광경이었다.
+sign|표지판, 신호; 서명하다|2|Read the [sign] on the door.|문에 있는 표지판을 읽어 봐.
+signal|신호|3|Wait for the green [signal].|초록 신호를 기다려라.
+silence|침묵|3|There was a long [silence].|긴 침묵이 흘렀다.
+silent|조용한|3|The room was completely [silent].|방은 완전히 조용했다.
+silly|어리석은, 바보 같은|2|Don't ask [silly] questions.|바보 같은 질문은 하지 마.
+silver|은|2|She won a [silver] medal.|그녀는 은메달을 땄다.
+similar|비슷한|3|My bag is [similar] to yours.|내 가방은 네 것과 비슷하다.
+simple|간단한, 단순한|2|The rules are very [simple].|규칙은 매우 간단하다.
+since|~ 이래로; ~ 때문에|2|I have lived here [since] 2015.|나는 2015년부터 여기에 살았다.
+sing|노래하다|1|She [sings] very well.|그녀는 노래를 아주 잘한다.
+singer|가수|1|My favorite [singer] is IU.|내가 가장 좋아하는 가수는 아이유이다.
+single|단 하나의; 독신의|3|Not a [single] student was late.|한 학생도 늦지 않았다.
+sink|가라앉다; 싱크대|3|The ship began to [sink].|배가 가라앉기 시작했다.
+sir|(남자를 부를 때) 선생님, 손님|1|Can I help you, [sir]?|도와드릴까요, 손님?
+sister|언니, 누나, 여동생|1|My [sister] is a high school student.|우리 누나는 고등학생이다.
+sit|앉다|1|Please [sit] down.|앉으세요.
+situation|상황|3|This is a difficult [situation].|이것은 어려운 상황이다.
+size|크기, 사이즈|1|What [size] do you wear?|사이즈가 어떻게 되세요?
+skate|스케이트를 타다|2|Can you [skate]?|너 스케이트 탈 줄 아니?
+skateboard|스케이트보드|2|He rides his [skateboard] in the park.|그는 공원에서 스케이트보드를 탄다.
+ski|스키를 타다|1|We went [skiing] last winter.|우리는 지난겨울에 스키를 타러 갔다.
+skill|기술, 솜씨|2|Swimming is a useful [skill].|수영은 유용한 기술이다.
+skin|피부|2|Use sunscreen to protect your [skin].|피부를 보호하기 위해 자외선 차단제를 발라라.
+skirt|치마|1|She is wearing a long [skirt].|그녀는 긴 치마를 입고 있다.
+sky|하늘|1|The [sky] is blue today.|오늘은 하늘이 파랗다.
+sled|썰매|3|The kids rode a [sled] down the hill.|아이들이 썰매를 타고 언덕을 내려왔다.
+sleep|자다; 잠|1|I [sleep] eight hours a day.|나는 하루에 여덟 시간을 잔다.
+sleepy|졸린|1|I'm so [sleepy].|나는 너무 졸려.
+slice|조각; 얇게 썰다|2|I ate two [slices] of pizza.|나는 피자 두 조각을 먹었다.
+slide|미끄러지다; 미끄럼틀|2|The kids are playing on the [slide].|아이들이 미끄럼틀에서 놀고 있다.
+slim|날씬한|3|She is tall and [slim].|그녀는 키가 크고 날씬하다.
+slip|미끄러지다|3|Be careful not to [slip] on the ice.|얼음 위에서 미끄러지지 않게 조심해라.
+slow|느린|1|The bus is very [slow].|그 버스는 매우 느리다.
+slowly|천천히|1|Please speak [slowly].|천천히 말해 주세요.
+small|작은|1|My room is [small].|내 방은 작다.
+smart|똑똑한|1|He is very [smart].|그는 아주 똑똑하다.
+smartphone|스마트폰|1|I got a new [smartphone].|나는 새 스마트폰이 생겼다.
+smell|냄새; 냄새가 나다|1|This flower [smells] good.|이 꽃은 좋은 냄새가 난다.
+smile|미소; 미소 짓다|1|She always [smiles] at me.|그녀는 항상 나에게 미소 짓는다.
+smoke|연기; 담배를 피우다|2|There's [smoke] coming from the kitchen.|부엌에서 연기가 나고 있다.
+smooth|매끄러운|3|The baby's skin is very [smooth].|아기 피부가 아주 매끄럽다.
+snack|간식|1|I eat a [snack] after school.|나는 방과 후에 간식을 먹는다.
+snail|달팽이|2|A [snail] moves very slowly.|달팽이는 아주 천천히 움직인다.
+snake|뱀|1|I'm afraid of [snakes].|나는 뱀이 무섭다.
+sneakers|운동화|2|I wear [sneakers] to school.|나는 학교에 운동화를 신고 간다.
+snow|눈; 눈이 오다|1|It [snowed] a lot last night.|어젯밤에 눈이 많이 왔다.
+snowman|눈사람|1|Let's build a [snowman]!|눈사람 만들자!
+soap|비누|2|Wash your hands with [soap].|비누로 손을 씻어라.
+soccer|축구|1|I play [soccer] every Saturday.|나는 토요일마다 축구를 한다.
+social|사회의, 사교적인|3|She is active on [social] media.|그녀는 소셜 미디어에서 활발하게 활동한다.
+society|사회|3|We live in a multicultural [society].|우리는 다문화 사회에 살고 있다.
+sock|양말|1|I can't find my other [sock].|나머지 양말 한 짝을 찾을 수가 없어.
+soda|탄산음료|2|I'd like a [soda], please.|탄산음료 하나 주세요.
+sofa|소파|1|The cat is sleeping on the [sofa].|고양이가 소파에서 자고 있다.
+soft|부드러운|1|This pillow is very [soft].|이 베개는 아주 푹신하다.
+soil|흙, 토양|3|Plants need good [soil] to grow.|식물이 자라려면 좋은 흙이 필요하다.
+solar|태양의|3|The house uses [solar] energy.|그 집은 태양 에너지를 사용한다.
+soldier|군인|2|My uncle was a [soldier].|우리 삼촌은 군인이었다.
+solve|풀다, 해결하다|2|Can you [solve] this puzzle?|이 퍼즐을 풀 수 있니?
+someday|언젠가|2|I want to visit Paris [someday].|나는 언젠가 파리에 가 보고 싶다.
+something|무언가|1|I want to eat [something] sweet.|나는 단것을 좀 먹고 싶다.
+sometimes|때때로|1|I [sometimes] go to the movies alone.|나는 가끔 혼자 영화를 보러 간다.
+son|아들|1|Their [son] is a doctor.|그들의 아들은 의사이다.
+song|노래|1|Let's sing a [song] together.|함께 노래를 부르자.
+soon|곧|1|See you [soon].|곧 보자.
+sore|아픈, 따가운|3|I have a [sore] throat.|나는 목이 아프다.
+sorry|미안한, 유감스러운|1|I'm [sorry] I'm late.|늦어서 미안해.
+sound|소리; ~하게 들리다|1|That [sounds] great!|그거 좋은데!
+soup|수프|1|This [soup] is too hot.|이 수프는 너무 뜨겁다.
+sour|(맛이) 신|2|Lemons taste [sour].|레몬은 맛이 시다.
+south|남쪽|1|Birds fly [south] in winter.|새들은 겨울에 남쪽으로 날아간다.
+souvenir|기념품|3|I bought a [souvenir] for my friend.|나는 친구에게 줄 기념품을 샀다.
+soybean|콩, 대두|3|Tofu is made from [soybeans].|두부는 콩으로 만든다.
+space|우주; 공간|2|I want to travel to [space].|나는 우주로 여행하고 싶다.
+spaghetti|스파게티|1|I love [spaghetti] with tomato sauce.|나는 토마토소스 스파게티를 아주 좋아한다.
+speak|말하다|1|Can you [speak] English?|너 영어 할 수 있니?
+speaker|연설자, 스피커|3|The [speaker] talked about the environment.|그 연설자는 환경에 대해 이야기했다.
+special|특별한|1|Today is a [special] day.|오늘은 특별한 날이다.
+speech|연설, 말|2|He gave a [speech] at the graduation.|그는 졸업식에서 연설을 했다.
+speed|속도|2|The car was going at high [speed].|그 차는 빠른 속도로 달리고 있었다.
+spell|철자를 말하다(쓰다)|1|How do you [spell] your name?|네 이름은 철자가 어떻게 되니?
+spend|(돈, 시간을) 쓰다, 보내다|2|I [spend] a lot of time reading.|나는 책을 읽는 데 많은 시간을 보낸다.
+spicy|매운|1|I don't like [spicy] food.|나는 매운 음식을 좋아하지 않는다.
+spider|거미|2|There's a [spider] on the wall.|벽에 거미가 있다.
+spirit|정신, 영혼|3|The team showed great [spirit].|그 팀은 대단한 정신력을 보여 주었다.
+spoon|숟가락|1|Koreans eat rice with a [spoon].|한국인은 숟가락으로 밥을 먹는다.
+sport|운동, 스포츠|1|What [sports] do you like?|너는 무슨 운동을 좋아하니?
+spot|장소, 점|3|This is a good [spot] for a picnic.|이곳은 소풍하기 좋은 장소이다.
+spread|펼치다, 퍼지다|3|The news [spread] quickly.|그 소식은 빠르게 퍼졌다.
+spring|봄|1|Flowers bloom in [spring].|봄에는 꽃이 핀다.
+square|정사각형; 광장|2|Draw a [square] on the paper.|종이에 정사각형을 그려라.
+squirrel|다람쥐|2|A [squirrel] climbed up the tree.|다람쥐 한 마리가 나무 위로 올라갔다.
+stadium|경기장|2|The [stadium] was full of fans.|경기장은 팬들로 가득 찼다.
+staff|직원|3|The hotel [staff] were very kind.|호텔 직원들은 매우 친절했다.
+stage|무대; 단계|2|The singer came onto the [stage].|가수가 무대 위로 올라왔다.
+stair|계단|2|Walk up the [stairs] to the second floor.|계단으로 2층에 올라가세요.
+stamp|우표, 도장|2|I need a [stamp] for this letter.|이 편지에 붙일 우표가 필요하다.
+stand|서다; 참다|1|Please [stand] up.|일어서 주세요.
+stapler|스테이플러|3|Can I use your [stapler]?|네 스테이플러 좀 써도 될까?
+star|별; 스타|1|There are many [stars] in the sky.|하늘에 별이 많다.
+start|시작하다|1|The movie will [start] soon.|영화가 곧 시작할 것이다.
+state|상태; 주(州)|3|Texas is a big [state] in the USA.|텍사스는 미국의 큰 주이다.
+station|역, 정거장|1|Where is the subway [station]?|지하철역이 어디에 있나요?
+stay|머무르다|1|I'll [stay] at my aunt's house.|나는 이모 댁에 머무를 것이다.
+steak|스테이크|2|How would you like your [steak]?|스테이크는 어떻게 익혀 드릴까요?
+steal|훔치다|3|Someone [stole] my bike.|누군가 내 자전거를 훔쳐 갔다.
+step|걸음, 단계|2|Take one [step] forward.|한 걸음 앞으로 나와라.
+stick|막대기; 붙이다|2|The dog is playing with a [stick].|개가 막대기를 가지고 놀고 있다.
+still|아직도, 여전히|2|Are you [still] hungry?|아직도 배고프니?
+stomach|배, 위|2|I have a [stomach] ache.|나는 배가 아프다.
+stone|돌|2|The wall is made of [stone].|그 벽은 돌로 만들어졌다.
+stop|멈추다; 정류장|1|[Stop] talking, please.|그만 이야기하세요.
+store|가게; 저장하다|1|I bought milk at the [store].|나는 가게에서 우유를 샀다.
+storm|폭풍|2|The [storm] knocked down many trees.|폭풍으로 많은 나무가 쓰러졌다.
+story|이야기|1|Tell me a [story].|이야기 하나 해 줘.
+stove|난로, 가스레인지|3|Don't touch the hot [stove].|뜨거운 가스레인지를 만지지 마라.
+straight|곧은, 똑바로|2|Go [straight] for two blocks.|두 블록 똑바로 가세요.
+strange|이상한, 낯선|1|I heard a [strange] noise.|나는 이상한 소리를 들었다.
+stranger|낯선 사람|2|Don't talk to [strangers].|낯선 사람과 이야기하지 마라.
+straw|빨대; 짚|3|Can I have a [straw]?|빨대 하나 주실래요?
+strawberry|딸기|1|I love [strawberry] ice cream.|나는 딸기 아이스크림을 아주 좋아한다.
+stream|개울, 시내|3|There is a small [stream] behind the house.|집 뒤에 작은 개울이 있다.
+street|거리, 길|1|There are many shops on this [street].|이 거리에는 가게가 많다.
+strength|힘, 강점|3|He doesn't have the [strength] to lift it.|그는 그것을 들어 올릴 힘이 없다.
+stress|스트레스|2|Exercise helps reduce [stress].|운동은 스트레스를 줄이는 데 도움이 된다.
+stretch|늘이다, 스트레칭하다|3|[Stretch] your arms before you swim.|수영하기 전에 팔을 쭉 펴라.
+strict|엄격한|3|My father is very [strict].|우리 아버지는 매우 엄격하시다.
+strike|치다, 때리다; 파업|3|The clock [struck] twelve.|시계가 12시를 쳤다.
+strong|강한|1|He is very [strong].|그는 아주 힘이 세다.
+student|학생|1|I am a middle school [student].|나는 중학생이다.
+study|공부하다|1|I [study] English every day.|나는 매일 영어를 공부한다.
+stupid|어리석은|2|It was a [stupid] mistake.|그것은 어리석은 실수였다.
+style|스타일, 방식|2|I like your hair [style].|네 머리 스타일이 마음에 든다.
+subject|과목, 주제|1|What's your favorite [subject]?|네가 가장 좋아하는 과목은 뭐니?
+subway|지하철|1|I take the [subway] to school.|나는 지하철을 타고 학교에 간다.
+succeed|성공하다|3|If you try hard, you will [succeed].|열심히 노력하면 성공할 것이다.
+success|성공|2|Hard work is the key to [success].|노력이 성공의 열쇠이다.
+successful|성공적인|3|The concert was very [successful].|그 콘서트는 매우 성공적이었다.
+such|그런, 매우 ~한|2|It was [such] a nice day.|정말 좋은 날이었다.
+sudden|갑작스러운|3|There was a [sudden] change in the weather.|날씨가 갑자기 변했다.
+suddenly|갑자기|2|[Suddenly], the lights went out.|갑자기 불이 꺼졌다.
+sugar|설탕|1|Don't put too much [sugar] in your coffee.|커피에 설탕을 너무 많이 넣지 마라.
+suggest|제안하다|3|I [suggest] we take a break.|잠깐 쉬는 게 어떨까요.
+suit|정장; 어울리다|3|That color [suits] you.|그 색은 너에게 잘 어울린다.
+summer|여름|1|We go to the beach every [summer].|우리는 매년 여름 해변에 간다.
+sun|해, 태양|1|The [sun] is shining.|해가 빛나고 있다.
+sunglasses|선글라스|2|Wear [sunglasses] on sunny days.|햇볕이 강한 날에는 선글라스를 써라.
+sunny|화창한|1|It's [sunny] today.|오늘은 날씨가 화창하다.
+sunrise|일출|3|We watched the [sunrise] on New Year's Day.|우리는 새해 첫날에 일출을 보았다.
+sunscreen|자외선 차단제|3|Put on [sunscreen] before you go out.|나가기 전에 자외선 차단제를 발라라.
+sunset|일몰|3|The [sunset] was beautiful.|일몰이 아름다웠다.
+supermarket|슈퍼마켓|1|Let's buy some snacks at the [supermarket].|슈퍼마켓에서 간식을 좀 사자.
+supper|저녁 식사|3|We had [supper] at seven.|우리는 7시에 저녁을 먹었다.
+supply|공급; 공급하다|3|We need school [supplies] like pens and notebooks.|우리는 펜과 공책 같은 학용품이 필요하다.
+support|지지하다, 응원하다|3|My parents always [support] me.|부모님은 항상 나를 응원해 주신다.
+suppose|생각하다, 가정하다|3|I [suppose] you're right.|네 말이 맞는 것 같다.
+sure|확실한; 물론|1|Are you [sure]?|확실하니?
+surf|파도타기를 하다|3|We [surfed] at the beach in Yangyang.|우리는 양양 해변에서 서핑을 했다.
+surface|표면|3|The [surface] of the lake was like a mirror.|호수의 표면은 거울 같았다.
+surprise|놀라움; 놀라게 하다|2|We had a [surprise] party for Mom.|우리는 엄마를 위한 깜짝 파티를 열었다.
+surprised|놀란|1|I was [surprised] at the news.|나는 그 소식에 놀랐다.
+surround|둘러싸다|3|The house is [surrounded] by trees.|그 집은 나무로 둘러싸여 있다.
+survey|설문 조사|3|We did a [survey] about students' hobbies.|우리는 학생들의 취미에 대해 설문 조사를 했다.
+survive|살아남다|3|Plants can't [survive] without water.|식물은 물 없이 살아남을 수 없다.
+sweat|땀; 땀을 흘리다|3|I was covered in [sweat] after running.|나는 달리고 나서 땀범벅이 되었다.
+sweater|스웨터|2|Put on a [sweater]. It's cold.|스웨터를 입어. 추워.
+sweet|달콤한|1|This cake is too [sweet].|이 케이크는 너무 달다.
+swim|수영하다|1|Can you [swim]?|너 수영할 줄 아니?
+swimsuit|수영복|2|Don't forget your [swimsuit].|수영복 잊지 마.
+swing|흔들다; 그네|3|The children are playing on the [swings].|아이들이 그네를 타고 놀고 있다.
+switch|스위치; 바꾸다|3|Can we [switch] seats?|우리 자리 바꿀 수 있을까?
+symbol|상징|3|The dove is a [symbol] of peace.|비둘기는 평화의 상징이다.
+system|체계, 시스템|3|The school has a new computer [system].|학교에 새 컴퓨터 시스템이 생겼다.
+T-shirt|티셔츠|1|I bought a white [T-shirt].|나는 흰 티셔츠를 샀다.
+table|탁자, 식탁; 표|1|Put the plates on the [table].|접시를 식탁 위에 놓아라.
+tablet|태블릿; 알약|3|I read e-books on my [tablet].|나는 태블릿으로 전자책을 읽는다.
+tail|꼬리|2|The dog wagged its [tail].|개가 꼬리를 흔들었다.
+take|가져가다, 데려가다; (시간이) 걸리다|1|It [takes] ten minutes to get there.|거기 가는 데 10분이 걸린다.
+talent|재능|3|She has a [talent] for music.|그녀는 음악에 재능이 있다.
+talent show|장기 자랑|2|I sang a song at the [talent show].|나는 장기 자랑에서 노래를 불렀다.
+talk|말하다, 이야기하다|1|Can I [talk] to you for a minute?|잠깐 이야기 좀 할 수 있을까?
+tall|키가 큰, 높은|1|My brother is very [tall].|우리 형은 키가 아주 크다.
+tap|가볍게 두드리다|3|Someone [tapped] me on the shoulder.|누군가 내 어깨를 톡톡 쳤다.
+tape|테이프|2|Fix the poster on the wall with [tape].|테이프로 포스터를 벽에 붙여라.
+task|일, 과제|3|Cleaning the house is a big [task].|집 청소는 큰일이다.
+taste|맛; 맛이 나다|1|This soup [tastes] good.|이 수프는 맛이 좋다.
+taxi|택시|1|Let's take a [taxi].|택시를 타자.
+tea|차|1|Would you like some [tea]?|차 좀 드시겠어요?
+teach|가르치다|1|My mom [teaches] math.|우리 엄마는 수학을 가르치신다.
+teacher|선생님|1|Our [teacher] is very kind.|우리 선생님은 매우 친절하시다.
+team|팀|1|Our [team] won the game.|우리 팀이 경기에서 이겼다.
+tear|눈물; 찢다|2|[Tears] ran down her face.|눈물이 그녀의 얼굴을 타고 흘러내렸다.
+technology|기술|3|[Technology] is changing our lives.|기술이 우리의 삶을 바꾸고 있다.
+teenager|십 대|2|Many [teenagers] like K-pop.|많은 십 대들이 K팝을 좋아한다.
+telephone|전화, 전화기|1|The [telephone] is ringing.|전화가 울리고 있다.
+television|텔레비전|1|We watched the game on [television].|우리는 텔레비전으로 그 경기를 보았다.
+tell|말하다, 알려 주다|1|[Tell] me about your trip.|네 여행에 대해 말해 줘.
+temperature|온도, 체온|3|The [temperature] dropped below zero.|기온이 영하로 떨어졌다.
+temple|절, 사원|2|We visited an old [temple] in Gyeongju.|우리는 경주에 있는 오래된 절을 방문했다.
+tennis|테니스|1|Do you play [tennis]?|너 테니스 치니?
+tent|텐트|2|We slept in a [tent].|우리는 텐트에서 잤다.
+term|학기; 용어|3|The new [term] starts in March.|새 학기는 3월에 시작한다.
+terrible|끔찍한|2|I had a [terrible] dream.|나는 끔찍한 꿈을 꾸었다.
+test|시험|1|We have a science [test] today.|우리는 오늘 과학 시험이 있다.
+text|문자 메시지; 본문|2|I'll [text] you later.|나중에 문자 보낼게.
+textbook|교과서|1|Open your [textbook] to page 10.|교과서 10쪽을 펴세요.
+thank|감사하다|1|[Thank] you for your help.|도와줘서 고마워.
+theater|극장|2|We watched a play at the [theater].|우리는 극장에서 연극을 보았다.
+then|그때, 그러고 나서|1|I was ten years old [then].|그때 나는 열 살이었다.
+there|거기에|1|I'll meet you [there].|거기서 만나자.
+therefore|그러므로|3|I was sick. [Therefore], I stayed home.|나는 아팠다. 그래서 집에 있었다.
+thick|두꺼운, 짙은|2|This book is very [thick].|이 책은 매우 두껍다.
+thief|도둑|2|The police caught the [thief].|경찰이 도둑을 잡았다.
+thin|얇은, 마른|2|She is tall and [thin].|그녀는 키가 크고 말랐다.
+thing|것, 물건|1|I have many [things] to do.|나는 할 일이 많다.
+think|생각하다|1|What do you [think] about it?|너는 그것에 대해 어떻게 생각하니?
+thirsty|목마른|1|I'm [thirsty]. Can I have some water?|목말라. 물 좀 마셔도 돼?
+though|비록 ~이지만|3|[Though] he is young, he is very wise.|그는 어리지만 매우 현명하다.
+thought|생각|3|That's an interesting [thought].|그거 흥미로운 생각이다.
+thousand|1,000, 천|2|There were a [thousand] people at the concert.|콘서트에 천 명의 사람들이 있었다.
+throat|목구멍|3|I have a sore [throat].|나는 목이 아프다.
+through|~을 통해, ~을 지나서|2|The train went [through] a tunnel.|기차가 터널을 통과했다.
+throw|던지다|1|[Throw] the ball to me.|공을 나에게 던져.
+thunder|천둥|3|I heard [thunder] last night.|나는 어젯밤에 천둥소리를 들었다.
+ticket|표, 입장권|1|I have two [tickets] for the concert.|나는 콘서트 표가 두 장 있다.
+tidy|깔끔한; 정리하다|3|Keep your room [tidy].|방을 깔끔하게 유지해라.
+tie|넥타이; 묶다|2|[Tie] your shoes.|신발 끈을 매라.
+tiger|호랑이|1|The [tiger] is a symbol of Korea.|호랑이는 한국의 상징이다.
+tight|꽉 끼는, 단단한|3|These shoes are too [tight].|이 신발은 너무 꽉 낀다.
+time|시간; ~번|1|What [time] is it now?|지금 몇 시니?
+tiny|아주 작은|2|The baby has [tiny] hands.|그 아기는 손이 아주 작다.
+tip|끝; 조언; 팁|3|Here are some [tips] for good sleep.|숙면을 위한 몇 가지 조언이 여기 있다.
+tired|피곤한|1|I'm very [tired] today.|나는 오늘 무척 피곤하다.
+title|제목|2|What's the [title] of the song?|그 노래의 제목이 뭐니?
+toast|토스트, 구운 빵|2|I had [toast] and eggs for breakfast.|나는 아침으로 토스트와 달걀을 먹었다.
+today|오늘|1|What day is it [today]?|오늘 무슨 요일이니?
+toe|발가락|2|I hurt my [toe].|나는 발가락을 다쳤다.
+together|함께|1|Let's go [together].|함께 가자.
+toilet|변기, 화장실|2|Please flush the [toilet].|변기 물을 내려 주세요.
+tomato|토마토|1|I put [tomatoes] in the salad.|나는 샐러드에 토마토를 넣었다.
+tomorrow|내일|1|See you [tomorrow].|내일 보자.
+tongue|혀|3|The doctor asked me to stick out my [tongue].|의사가 나에게 혀를 내밀어 보라고 했다.
+tonight|오늘 밤|1|What are you doing [tonight]?|오늘 밤에 뭐 하니?
+too|너무; ~도|1|This coffee is [too] hot.|이 커피는 너무 뜨겁다.
+tool|도구|2|A hammer is a useful [tool].|망치는 유용한 도구이다.
+tooth|이, 치아|1|I have a bad [tooth].|나는 썩은 이가 하나 있다.
+toothbrush|칫솔|2|I need a new [toothbrush].|나는 새 칫솔이 필요하다.
+toothpaste|치약|2|Put some [toothpaste] on your toothbrush.|칫솔에 치약을 조금 짜라.
+top|꼭대기, 위|2|We reached the [top] of the mountain.|우리는 산꼭대기에 도착했다.
+topic|주제|2|What's the [topic] of your speech?|네 발표 주제가 뭐니?
+total|전체의, 합계|3|The [total] cost was 50,000 won.|총비용은 5만 원이었다.
+touch|만지다|1|Please don't [touch] the paintings.|그림을 만지지 마세요.
+tour|여행, 관광|2|We went on a [tour] of the city.|우리는 시내 관광을 했다.
+tourist|관광객|2|Many [tourists] visit Seoul every year.|매년 많은 관광객이 서울을 방문한다.
+toward|~ 쪽으로|3|He walked [toward] the door.|그는 문 쪽으로 걸어갔다.
+towel|수건|2|Can I have a clean [towel]?|깨끗한 수건 하나 주실래요?
+tower|탑|2|Have you been to Namsan [Tower]?|남산 타워에 가 본 적 있니?
+town|마을, 동네|1|I live in a small [town].|나는 작은 마을에 산다.
+toy|장난감|1|The child is playing with his [toys].|그 아이는 장난감을 가지고 놀고 있다.
+trade|무역, 거래|3|Korea [trades] with many countries.|한국은 많은 나라와 무역을 한다.
+tradition|전통|3|Eating rice cake soup on New Year's Day is a Korean [tradition].|설날에 떡국을 먹는 것은 한국의 전통이다.
+traditional|전통적인|2|Hanbok is [traditional] Korean clothing.|한복은 한국의 전통 의상이다.
+traffic|교통, 차량들|2|There was a lot of [traffic] this morning.|오늘 아침에는 차가 많이 막혔다.
+train|기차; 훈련하다|1|We went to Busan by [train].|우리는 기차를 타고 부산에 갔다.
+training|훈련|3|The players have [training] every day.|선수들은 매일 훈련을 한다.
+trash|쓰레기|2|Don't throw [trash] on the street.|길에 쓰레기를 버리지 마라.
+travel|여행하다; 여행|1|I want to [travel] around the world.|나는 세계 여행을 하고 싶다.
+treasure|보물|2|The pirates found the [treasure].|해적들이 보물을 찾았다.
+treat|대하다, 치료하다; 대접|3|Don't [treat] me like a child.|나를 어린애 취급하지 마.
+tree|나무|1|There is a big [tree] in the yard.|마당에 큰 나무가 한 그루 있다.
+trick|속임수, 묘기|3|The magician showed us a card [trick].|마술사가 우리에게 카드 마술을 보여 주었다.
+trip|여행|1|We took a [trip] to Gyeongju.|우리는 경주로 여행을 갔다.
+trouble|문제, 곤란|2|I'm in big [trouble].|나는 큰일 났다.
+truck|트럭|2|The [truck] is carrying apples.|그 트럭은 사과를 싣고 있다.
+true|사실인, 진짜의|1|Is it [true]?|그게 사실이니?
+trumpet|트럼펫|3|He plays the [trumpet] in the band.|그는 밴드에서 트럼펫을 분다.
+trust|믿다, 신뢰하다|2|I [trust] my friends.|나는 내 친구들을 믿는다.
+truth|진실|3|Tell me the [truth].|진실을 말해 줘.
+try|노력하다, 시도하다|1|[Try] it again.|다시 해 봐.
+tunnel|터널|3|The train went into a long [tunnel].|기차가 긴 터널로 들어갔다.
+turn|돌다, 돌리다; 차례|1|It's your [turn].|네 차례야.
+turtle|거북|2|The [turtle] moved slowly.|거북이 천천히 움직였다.
+twice|두 번|2|I brush my teeth [twice] a day.|나는 하루에 두 번 이를 닦는다.
+twin|쌍둥이|2|My sister and I are [twins].|내 여동생과 나는 쌍둥이이다.
+type|유형, 종류; 타자 치다|3|What [type] of music do you like?|너는 어떤 종류의 음악을 좋아하니?
+typhoon|태풍|3|A [typhoon] hit the south coast.|태풍이 남해안을 강타했다.
+ugly|못생긴|2|The duckling thought he was [ugly].|그 새끼 오리는 자신이 못생겼다고 생각했다.
+umbrella|우산|1|Take an [umbrella]. It might rain.|우산 가져가. 비가 올지도 몰라.
+uncle|삼촌, 외삼촌|1|My [uncle] lives in Canada.|우리 삼촌은 캐나다에 사신다.
+under|~ 아래에|1|The cat is [under] the table.|고양이가 탁자 아래에 있다.
+underground|지하의|3|There is an [underground] parking lot.|지하 주차장이 있다.
+understand|이해하다|1|I don't [understand] this question.|나는 이 질문을 이해하지 못하겠다.
+underwear|속옷|3|Pack enough [underwear] for the trip.|여행에 충분한 속옷을 챙겨라.
+unhappy|불행한|2|Why are you so [unhappy]?|왜 그렇게 불행해하니?
+uniform|교복, 유니폼|1|We wear school [uniforms].|우리는 교복을 입는다.
+unique|독특한, 유일한|3|Everyone is [unique].|모든 사람은 저마다 독특하다.
+universe|우주|3|The [universe] is full of mysteries.|우주는 수수께끼로 가득하다.
+university|대학교|2|My brother goes to [university] in Seoul.|우리 형은 서울에 있는 대학교에 다닌다.
+unless|~하지 않는 한|3|You'll be late [unless] you hurry.|서두르지 않으면 늦을 것이다.
+unlike|~와 달리|3|[Unlike] my sister, I love sports.|우리 언니와 달리 나는 운동을 아주 좋아한다.
+until|~까지|2|Wait here [until] I come back.|내가 돌아올 때까지 여기서 기다려.
+unusual|특이한, 흔치 않은|3|It's [unusual] to see snow in April.|4월에 눈을 보는 것은 흔치 않다.
+upset|속상한, 화난|2|She was [upset] about her grades.|그녀는 성적 때문에 속상했다.
+upstairs|위층으로, 위층에|2|My room is [upstairs].|내 방은 위층에 있다.
+use|사용하다; 사용|1|Can I [use] your computer?|네 컴퓨터 좀 써도 되니?
+useful|유용한|2|This app is very [useful].|이 앱은 매우 유용하다.
+usual|평소의|3|He came home later than [usual].|그는 평소보다 늦게 집에 왔다.
+usually|보통, 대개|1|I [usually] go to bed at 11.|나는 보통 11시에 잔다.
+vacation|방학, 휴가|1|What did you do during the summer [vacation]?|여름 방학 동안 뭐 했니?
+valley|계곡, 골짜기|3|There is a river in the [valley].|그 골짜기에는 강이 흐른다.
+valuable|소중한, 값비싼|3|Time is more [valuable] than money.|시간은 돈보다 더 소중하다.
+value|가치|3|I learned the [value] of friendship.|나는 우정의 가치를 배웠다.
+various|다양한|3|The store sells [various] kinds of fruit.|그 가게는 다양한 종류의 과일을 판다.
+vase|꽃병|3|Put the flowers in a [vase].|꽃을 꽃병에 꽂아라.
+vegetable|채소|1|Eat more [vegetables].|채소를 더 많이 먹어라.
+very|매우|1|It's [very] cold today.|오늘은 매우 춥다.
+vet|수의사|3|We took our sick dog to the [vet].|우리는 아픈 개를 수의사에게 데려갔다.
+victory|승리|3|The team celebrated their [victory].|그 팀은 승리를 축하했다.
+video|비디오, 영상|1|Let's watch a [video] on YouTube.|유튜브에서 영상을 보자.
+view|경치, 견해|2|The [view] from the top is amazing.|꼭대기에서 보는 경치가 놀랍다.
+village|마을|2|My grandparents live in a small [village].|조부모님은 작은 마을에 사신다.
+violin|바이올린|1|She plays the [violin] in the orchestra.|그녀는 오케스트라에서 바이올린을 연주한다.
+visit|방문하다; 방문|1|I [visited] my grandparents last weekend.|나는 지난 주말에 조부모님 댁을 방문했다.
+visitor|방문객|2|The museum has many [visitors].|그 박물관은 방문객이 많다.
+voice|목소리|1|She has a beautiful [voice].|그녀는 목소리가 아름답다.
+volleyball|배구|2|We played [volleyball] on the beach.|우리는 해변에서 배구를 했다.
+volunteer|자원봉사자; 자원봉사하다|2|I [volunteer] at the animal shelter.|나는 동물 보호소에서 자원봉사를 한다.
+vote|투표하다; 투표|3|Who did you [vote] for?|너는 누구에게 투표했니?
+wait|기다리다|1|Please [wait] for me.|나를 기다려 줘.
+waiter|웨이터, 종업원|2|The [waiter] brought us the menu.|종업원이 우리에게 메뉴판을 가져다주었다.
+wake|깨다, 깨우다|1|Please [wake] me up at seven.|7시에 나를 깨워 줘.
+walk|걷다; 산책|1|Let's take a [walk].|산책하자.
+wall|벽|1|There is a clock on the [wall].|벽에 시계가 있다.
+wallet|지갑|2|I lost my [wallet] on the bus.|나는 버스에서 지갑을 잃어버렸다.
+want|원하다|1|I [want] a new phone.|나는 새 휴대폰을 원한다.
+war|전쟁|2|Many people died in the [war].|그 전쟁에서 많은 사람들이 죽었다.
+warm|따뜻한|1|It's [warm] today.|오늘은 날씨가 따뜻하다.
+warn|경고하다|3|I [warned] him about the danger.|나는 그에게 그 위험에 대해 경고했다.
+wash|씻다|1|[Wash] your hands before eating.|먹기 전에 손을 씻어라.
+waste|낭비하다; 쓰레기|2|Don't [waste] your time.|시간을 낭비하지 마라.
+watch|보다; 손목시계|1|I [watch] TV after dinner.|나는 저녁 식사 후에 TV를 본다.
+water|물; 물을 주다|1|Please give me some [water].|물 좀 주세요.
+watermelon|수박|1|We ate [watermelon] on a hot day.|우리는 더운 날 수박을 먹었다.
+wave|파도; 손을 흔들다|2|She [waved] goodbye to us.|그녀는 우리에게 손을 흔들며 작별 인사를 했다.
+way|길, 방법|1|Can you tell me the [way] to the station?|역으로 가는 길을 알려 주시겠어요?
+weak|약한|2|I felt [weak] after being sick.|나는 아프고 나서 몸이 약해졌다.
+wealth|부, 재산|3|Health is more important than [wealth].|건강은 재산보다 더 중요하다.
+wear|입다, 쓰다, 신다|1|I [wear] glasses.|나는 안경을 쓴다.
+weather|날씨|1|How is the [weather] today?|오늘 날씨는 어떠니?
+website|웹사이트|2|Visit our [website] for more information.|더 많은 정보는 저희 웹사이트를 방문해 주세요.
+wedding|결혼식|2|I went to my cousin's [wedding].|나는 사촌의 결혼식에 갔다.
+week|주, 일주일|1|I go swimming twice a [week].|나는 일주일에 두 번 수영하러 간다.
+weekday|평일|2|I go to school on [weekdays].|나는 평일에 학교에 간다.
+weekend|주말|1|What did you do on the [weekend]?|주말에 뭐 했니?
+weigh|무게가 ~이다|3|How much do you [weigh]?|너는 몸무게가 얼마니?
+weight|무게, 체중|3|He is trying to lose [weight].|그는 체중을 줄이려고 노력하고 있다.
+welcome|환영하다|1|[Welcome] to our school!|우리 학교에 온 것을 환영해!
+well|잘; 건강한|1|She sings very [well].|그녀는 노래를 아주 잘한다.
+west|서쪽|1|The sun sets in the [west].|해는 서쪽으로 진다.
+wet|젖은|2|My shoes got [wet] in the rain.|비에 내 신발이 젖었다.
+whale|고래|2|A [whale] is the largest animal on Earth.|고래는 지구에서 가장 큰 동물이다.
+wheel|바퀴|3|A bicycle has two [wheels].|자전거는 바퀴가 두 개이다.
+wheelchair|휠체어|3|He uses a [wheelchair] to get around.|그는 휠체어를 타고 다닌다.
+while|~하는 동안|2|I listen to music [while] I study.|나는 공부하는 동안 음악을 듣는다.
+whisper|속삭이다|3|She [whispered] something in my ear.|그녀가 내 귀에 무언가를 속삭였다.
+whistle|호루라기; 휘파람을 불다|3|The referee blew the [whistle].|심판이 호루라기를 불었다.
+whole|전체의, 모든|2|I ate the [whole] cake.|나는 케이크를 통째로 다 먹었다.
+wide|넓은|2|The river is very [wide].|그 강은 매우 넓다.
+wife|아내|2|His [wife] is a doctor.|그의 아내는 의사이다.
+wild|야생의|2|Lions are [wild] animals.|사자는 야생 동물이다.
+will|~할 것이다; 의지|1|I [will] call you tomorrow.|내일 너에게 전화할게.
+win|이기다, 따다|1|Our team will [win] the game.|우리 팀이 경기에서 이길 것이다.
+wind|바람|1|The [wind] is blowing hard.|바람이 세게 불고 있다.
+window|창문|1|Open the [window], please.|창문 좀 열어 주세요.
+windy|바람이 부는|1|It's [windy] today.|오늘은 바람이 분다.
+wing|날개|2|The bird spread its [wings].|새가 날개를 펼쳤다.
+winner|우승자|2|The [winner] gets a gold medal.|우승자는 금메달을 받는다.
+winter|겨울|1|It snows a lot in [winter].|겨울에는 눈이 많이 온다.
+wisdom|지혜|3|Old people have a lot of [wisdom].|노인들은 지혜가 많다.
+wise|현명한|2|My grandfather is a [wise] man.|우리 할아버지는 현명한 분이시다.
+wish|바라다; 소원|1|Make a [wish]!|소원을 빌어!
+without|~ 없이|2|I can't live [without] music.|나는 음악 없이는 살 수 없다.
+wolf|늑대|2|The [wolf] was hungry.|늑대는 배가 고팠다.
+woman|여자, 여성|1|That [woman] is my aunt.|저 여성분은 우리 이모이다.
+wonder|궁금해하다; 경이|2|I [wonder] what he is doing now.|나는 그가 지금 무엇을 하고 있는지 궁금하다.
+wonderful|훌륭한, 멋진|1|We had a [wonderful] time.|우리는 멋진 시간을 보냈다.
+wood|나무, 목재|2|The table is made of [wood].|그 탁자는 나무로 만들어졌다.
+wooden|나무로 된|3|We sat on a [wooden] bench.|우리는 나무 벤치에 앉았다.
+wool|양모, 털실|3|This sweater is made of [wool].|이 스웨터는 양모로 만들어졌다.
+word|단어, 말|1|What does this [word] mean?|이 단어는 무슨 뜻이니?
+work|일하다; 일|1|My dad [works] at a bank.|우리 아빠는 은행에서 일하신다.
+workbook|문제집, 워크북|2|Do pages 5 and 6 in your [workbook].|문제집 5쪽과 6쪽을 풀어라.
+worker|노동자, 일하는 사람|2|The [workers] are building a bridge.|일꾼들이 다리를 짓고 있다.
+world|세계|1|I want to travel around the [world].|나는 세계를 여행하고 싶다.
+worm|벌레, 지렁이|3|The early bird catches the [worm].|일찍 일어나는 새가 벌레를 잡는다.
+worry|걱정하다|1|Don't [worry]. Everything will be fine.|걱정하지 마. 모든 게 괜찮을 거야.
+worse|더 나쁜|3|The weather got [worse].|날씨가 더 나빠졌다.
+worst|최악의|3|It was the [worst] day of my life.|그날은 내 인생 최악의 날이었다.
+worth|~의 가치가 있는|3|This book is [worth] reading.|이 책은 읽을 가치가 있다.
+wound|상처, 부상|3|The doctor cleaned the [wound].|의사가 상처를 소독했다.
+wrap|싸다, 포장하다|3|She [wrapped] the gift in red paper.|그녀는 선물을 빨간 종이로 포장했다.
+wrist|손목|3|I wear a watch on my left [wrist].|나는 왼쪽 손목에 시계를 찬다.
+write|쓰다|1|[Write] your name here.|여기에 이름을 쓰세요.
+writer|작가|2|She wants to be a [writer].|그녀는 작가가 되고 싶어 한다.
+wrong|틀린, 잘못된|1|Your answer is [wrong].|네 답은 틀렸다.
+yard|마당|2|The kids are playing in the [yard].|아이들이 마당에서 놀고 있다.
+year|해, 년|1|I'm fourteen [years] old.|나는 열네 살이다.
+yell|소리치다|3|Don't [yell] at your sister.|여동생에게 소리 지르지 마라.
+yellow|노란색의|1|Bananas are [yellow].|바나나는 노란색이다.
+yesterday|어제|1|I met her [yesterday].|나는 어제 그녀를 만났다.
+yet|아직|2|I haven't finished my homework [yet].|나는 아직 숙제를 끝내지 못했다.
+yogurt|요구르트|2|I eat [yogurt] with fruit.|나는 과일과 함께 요구르트를 먹는다.
+young|어린, 젊은|1|My mother looks [young].|우리 엄마는 젊어 보이신다.
+youth|젊음, 청춘|3|He spent his [youth] in Busan.|그는 젊은 시절을 부산에서 보냈다.
+zebra|얼룩말|2|A [zebra] has black and white stripes.|얼룩말은 검은색과 흰색 줄무늬가 있다.
+zero|0, 영|1|The temperature is below [zero].|기온이 영하이다.
+zone|구역, 지역|3|This is a no-parking [zone].|이곳은 주차 금지 구역이다.
+zoo|동물원|1|Let's go to the [zoo] this weekend.|이번 주말에 동물원에 가자.
+`;
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>영어 단어 퀴즈</title>
+<title>중학 영단어 2000</title>
 <style>
   :root {
     --bg: #eef4ff;
@@ -44,55 +2093,137 @@
     --muted: #6b7690;
     --primary: #4a6cf7;
     --primary-dark: #3553d4;
+    --primary-soft: #eef1ff;
     --border: #d5ddf0;
     --correct: #1f9d55;
     --correct-bg: #e3f7ec;
     --wrong: #d64545;
     --wrong-bg: #fde8e8;
+    --warn: #c77700;
+    --warn-bg: #fff4e0;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
     background: var(--bg);
     color: var(--text);
     font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    padding: 16px;
   }
+  .app { max-width: 560px; margin: 0 auto; }
   .card {
-    width: 100%;
-    max-width: 480px;
     background: var(--card);
     border-radius: 20px;
-    padding: 28px 24px;
+    padding: 24px 20px;
     box-shadow: 0 10px 30px rgba(40, 60, 120, 0.12);
+    margin-bottom: 16px;
   }
-  h1 { margin: 0 0 8px; font-size: 26px; text-align: center; }
-  .sub { margin: 0 0 24px; text-align: center; color: var(--muted); }
-  .top {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 8px;
+  h1 { margin: 0 0 6px; font-size: 26px; text-align: center; }
+  h2 { font-size: 17px; margin: 22px 0 10px; }
+  h2:first-child { margin-top: 0; }
+  .sub { margin: 0 0 4px; text-align: center; color: var(--muted); font-size: 14px; }
+  .hidden { display: none !important; }
+
+  /* 선택 칩 */
+  .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .chips.four { grid-template-columns: repeat(2, 1fr); }
+  .chip {
+    padding: 12px 8px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    text-align: center;
   }
-  .bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 24px; }
+  .chip small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .chip.on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-dark); font-weight: 700; }
+  .chip.on small { color: var(--primary-dark); }
+
+  .progress-row { display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 8px; }
+  .progress-row .label { width: 52px; font-weight: 700; }
+  .progress-row .meter { flex: 1; height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+  .progress-row .meter > div { height: 100%; background: var(--primary); }
+  .progress-row .num { width: 82px; text-align: right; color: var(--muted); font-size: 13px; }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--primary);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 10px;
+  }
+  .btn:hover:not(:disabled) { background: var(--primary-dark); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.warn { background: var(--warn); }
+  .btn.ghost { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+  .btn.ghost:hover { background: var(--primary-soft); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* 문제 화면 */
+  .top { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+  .bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 18px; }
   .bar > div { height: 100%; background: var(--primary); width: 0; transition: width .3s; }
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--primary-dark);
+  }
+  .tag.review { background: var(--warn-bg); color: var(--warn); }
+  .qhead { text-align: center; margin-bottom: 10px; }
   .word {
     text-align: center;
     font-size: 40px;
     font-weight: 800;
-    margin: 8px 0 4px;
+    margin: 6px 0 4px;
     word-break: break-word;
   }
-  .hint { text-align: center; color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+  .speak {
+    border: none;
+    background: var(--primary-soft);
+    color: var(--primary-dark);
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    font-size: 17px;
+    cursor: pointer;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  .hint { text-align: center; color: var(--muted); margin: 0 0 18px; font-size: 14px; }
+  .sentence {
+    font-size: 21px;
+    line-height: 1.6;
+    text-align: center;
+    margin: 10px 0 6px;
+    word-break: break-word;
+  }
+  .sentence b { color: var(--primary-dark); }
+  .blank {
+    display: inline-block;
+    min-width: 80px;
+    border-bottom: 3px solid var(--primary);
+    color: transparent;
+  }
+  .trans { text-align: center; color: var(--muted); margin: 0 0 18px; }
   .choices { display: grid; gap: 10px; }
   .choice {
     width: 100%;
-    padding: 14px 16px;
+    padding: 13px 16px;
     font-size: 18px;
     text-align: left;
     background: #fff;
@@ -101,98 +2232,243 @@
     border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
-    transition: border-color .15s, background .15s;
   }
   .choice:hover:not(:disabled) { border-color: var(--primary); background: #f5f7ff; }
   .choice:disabled { cursor: default; }
   .choice .num { display: inline-block; width: 28px; color: var(--muted); font-weight: 700; }
   .choice.correct { border-color: var(--correct); background: var(--correct-bg); color: var(--correct); font-weight: 700; }
   .choice.wrong { border-color: var(--wrong); background: var(--wrong-bg); color: var(--wrong); font-weight: 700; }
-  .feedback {
-    min-height: 28px;
-    margin: 16px 0 8px;
-    text-align: center;
-    font-size: 18px;
-    font-weight: 700;
-  }
-  .feedback.ok { color: var(--correct); }
-  .feedback.no { color: var(--wrong); }
-  .btn {
-    display: block;
-    width: 100%;
-    padding: 14px;
-    font-size: 18px;
-    font-weight: 700;
-    color: #fff;
-    background: var(--primary);
-    border: none;
+  .spell-hint { text-align: center; font-size: 22px; letter-spacing: 4px; font-family: ui-monospace, Menlo, monospace; margin-bottom: 12px; color: var(--muted); }
+  .spell-row { display: flex; gap: 8px; }
+  .spell-row input {
+    flex: 1;
+    min-width: 0;
+    font-size: 20px;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
     border-radius: 12px;
-    cursor: pointer;
     font-family: inherit;
   }
-  .btn:hover { background: var(--primary-dark); }
-  .hidden { display: none !important; }
+  .spell-row input:focus { outline: none; border-color: var(--primary); }
+  .spell-row input.correct { border-color: var(--correct); background: var(--correct-bg); }
+  .spell-row input.wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+  .spell-row .btn { width: auto; margin: 0; padding: 12px 18px; }
+  .feedback { min-height: 26px; margin: 16px 0 8px; text-align: center; font-size: 18px; font-weight: 700; }
+  .feedback.ok { color: var(--correct); }
+  .feedback.no { color: var(--wrong); }
+  .explain {
+    background: #f6f8fd;
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 6px;
+  }
+  .explain .line1 { display: flex; align-items: center; gap: 8px; font-size: 17px; margin-bottom: 8px; }
+  .explain .line1 .en { font-weight: 800; }
+  .explain .ex { display: flex; align-items: flex-start; gap: 8px; }
+  .explain .ex p { margin: 0; line-height: 1.5; }
+  .explain .ex .kr { color: var(--muted); font-size: 14px; }
+  .explain .ex b { color: var(--primary-dark); }
+  .quit { background: none; border: none; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; text-decoration: underline; display: block; margin: 14px auto 0; }
+
+  /* 결과 */
   .score { text-align: center; font-size: 56px; font-weight: 800; color: var(--primary); margin: 8px 0; }
-  .msg { text-align: center; font-size: 18px; margin: 0 0 20px; }
-  .wrong-list { list-style: none; padding: 0; margin: 0 0 24px; }
-  .wrong-list li {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
+  .msg { text-align: center; font-size: 18px; margin: 0 0 8px; }
+  .perfect { text-align: center; color: var(--correct); font-weight: 700; margin: 16px 0; }
+
+  /* 단어 목록 */
+  .wlist { list-style: none; padding: 0; margin: 0; }
+  .wlist li {
     padding: 12px 14px;
-    border-radius: 10px;
-    background: var(--wrong-bg);
+    border-radius: 12px;
+    background: #f6f8fd;
     margin-bottom: 8px;
   }
-  .wrong-list .en { font-weight: 800; }
-  .wrong-list .mine { color: var(--wrong); font-size: 13px; }
-  .perfect { text-align: center; color: var(--correct); font-weight: 700; margin: 0 0 24px; }
-  h2 { font-size: 18px; margin: 0 0 12px; }
+  .wlist li.bad { background: var(--wrong-bg); }
+  .wlist .row1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .wlist .en { font-weight: 800; font-size: 17px; }
+  .wlist .ko { flex: 1; min-width: 80px; }
+  .wlist .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #fff; color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+  .wlist .badge.miss { color: var(--wrong); border-color: var(--wrong); }
+  .wlist .ex { font-size: 14px; margin-top: 6px; line-height: 1.5; }
+  .wlist .ex b { color: var(--primary-dark); }
+  .wlist .ex .kr { color: var(--muted); display: block; }
+  .wlist .mine { color: var(--wrong); font-size: 13px; margin-top: 4px; }
+  .filters { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .filters select, .filters input[type=search] {
+    font: inherit;
+    font-size: 15px;
+    padding: 10px 12px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text);
+  }
+  .filters input[type=search] { flex: 1; min-width: 140px; }
+  .check { display: flex; align-items: center; gap: 6px; font-size: 14px; margin-bottom: 12px; color: var(--text); }
+  .count-line { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .more { text-align: center; color: var(--muted); font-size: 14px; }
+  .link { background: none; border: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; margin-top: 12px; }
+  .backbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .backbar button { background: none; border: none; font: inherit; color: var(--primary); cursor: pointer; font-size: 15px; padding: 4px 0; }
+  .review-note { background: var(--warn-bg); color: var(--warn); border-radius: 12px; padding: 12px 14px; font-size: 14px; margin-top: 12px; line-height: 1.5; }
 </style>
 </head>
 <body>
-<div class="card">
+<div class="app">
 
-  <!-- 시작 화면 -->
-  <section id="start">
-    <h1>📝 영어 단어 퀴즈</h1>
-    <p class="sub">영어 단어의 알맞은 뜻을 골라 보세요!</p>
-    <button class="btn" id="startBtn">시작하기</button>
+  <!-- ===== 홈 ===== -->
+  <section id="home" class="card">
+    <h1>📝 중학 영단어</h1>
+    <p class="sub" id="totalText"></p>
+
+    <h2>학년 고르기 <small style="color:var(--muted);font-weight:400">(여러 개 선택 가능)</small></h2>
+    <div class="chips" id="gradeChips"></div>
+
+    <h2>연습 방법</h2>
+    <div class="chips four" id="modeChips"></div>
+
+    <h2>문제 수</h2>
+    <div class="chips" id="countChips"></div>
+
+    <button class="btn" id="startBtn">연습 시작</button>
+    <button class="btn warn" id="reviewBtn">🔁 자주 틀린 단어 복습</button>
+    <button class="btn ghost" id="listBtn">📖 단어장 보기</button>
+
+    <h2>나의 학습 현황</h2>
+    <div id="progressBox"></div>
+    <p class="count-line" style="margin-top:10px">아직 안 푼 단어가 먼저 나와요. 틀린 단어는 '복습'에 모이고, 복습에서 2번 연속 맞히면 빠져요.</p>
   </section>
 
-  <!-- 문제 화면 -->
-  <section id="quiz" class="hidden">
+  <!-- ===== 문제 ===== -->
+  <section id="quiz" class="card hidden">
     <div class="top">
       <span id="progressText">1 / 10</span>
-      <span id="scoreText">점수 0</span>
+      <span id="scoreText">맞힘 0</span>
     </div>
     <div class="bar"><div id="progressBar"></div></div>
-    <div class="word" id="word">word</div>
-    <p class="hint">알맞은 뜻을 고르세요 (키보드 1~4도 가능)</p>
-    <div class="choices" id="choices"></div>
+    <div id="qbox"></div>
     <div class="feedback" id="feedback"></div>
+    <div class="explain hidden" id="explain"></div>
     <button class="btn hidden" id="nextBtn">다음 문제</button>
+    <button class="quit" id="quitBtn">그만하고 결과 보기</button>
   </section>
 
-  <!-- 결과 화면 -->
-  <section id="result" class="hidden">
+  <!-- ===== 결과 ===== -->
+  <section id="result" class="card hidden">
     <h1>결과</h1>
     <div class="score" id="finalScore">0 / 10</div>
     <p class="msg" id="finalMsg"></p>
     <div id="wrongBox"></div>
-    <button class="btn" id="retryBtn">다시 풀기</button>
+    <div class="btn-row">
+      <button class="btn warn" id="retryWrongBtn">틀린 것 다시</button>
+      <button class="btn" id="againBtn">새 문제 풀기</button>
+    </div>
+    <button class="btn ghost" id="homeBtn">처음으로</button>
+  </section>
+
+  <!-- ===== 단어장 ===== -->
+  <section id="list" class="card hidden">
+    <div class="backbar">
+      <button id="listBackBtn">← 처음으로</button>
+      <strong>📖 단어장</strong>
+      <span style="width:72px"></span>
+    </div>
+    <div class="filters">
+      <select id="listGrade">
+        <option value="0">전체 학년</option>
+        <option value="1">1학년</option>
+        <option value="2">2학년</option>
+        <option value="3">3학년</option>
+      </select>
+      <input type="search" id="listSearch" placeholder="영어나 뜻으로 찾기">
+    </div>
+    <label class="check"><input type="checkbox" id="listMissOnly"> 틀린 적 있는 단어만 (많이 틀린 순)</label>
+    <div class="count-line" id="listCount"></div>
+    <ul class="wlist" id="wordList"></ul>
+    <div class="more" id="listMore"></div>
+    <button class="link" id="resetBtn">학습 기록 모두 지우기</button>
   </section>
 
 </div>
 
 <script>
-  const $ = (id) => document.getElementById(id);
+  // ---------------------------------------------------------------
+  //  단어 읽기
+  // ---------------------------------------------------------------
+  function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
-  let questions = [];
-  let current = 0;
-  let score = 0;
-  let wrongs = [];
-  let answered = false;
+  function parseWords(text) {
+    const list = [];
+    const seen = new Set();
+    text.split("\n").forEach((raw) => {
+      const line = raw.trim();
+      if (!line || line.startsWith("#")) return;
+      const p = line.split("|").map((s) => s.trim());
+      if (p.length < 2 || !p[0] || !p[1]) return;
+      const en = p[0];
+      const id = en.toLowerCase();
+      if (seen.has(id)) return;
+      seen.add(id);
+      const grade = [1, 2, 3].includes(Number(p[2])) ? Number(p[2]) : 1;
+      let sen = p[3] || "";
+      const tr = p[4] || "";
+      // 대괄호가 없으면 예문에서 단어를 찾아 자동으로 표시
+      if (sen && !/\[[^\]]+\]/.test(sen)) {
+        const re = new RegExp("\\b" + escapeRegExp(en) + "\\b", "i");
+        sen = re.test(sen) ? sen.replace(re, "[$&]") : "";
+      }
+      const m = sen.match(/\[([^\]]+)\]/);
+      list.push({ id, en, ko: p[1], grade, sen, tr, target: m ? m[1] : en });
+    });
+    return list;
+  }
+
+  const WORDS = parseWords(WORD_DATA);
+  const BY_ID = new Map(WORDS.map((w) => [w.id, w]));
+
+  // ---------------------------------------------------------------
+  //  학습 기록 (이 브라우저에 저장)
+  //  s: 푼 횟수, c: 맞힌 횟수, w: 틀린 횟수, st: 연속으로 맞힌 횟수, t: 마지막으로 틀린 시각
+  // ---------------------------------------------------------------
+  const STORE_KEY = "middle-word-2000-stats";
+  const SETTINGS_KEY = "middle-word-2000-settings";
+  const MASTER_STREAK = 2; // 복습에서 이만큼 연속으로 맞히면 복습 목록에서 빠짐
+
+  function load(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch (e) { return fallback; }
+  }
+  function save(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+  }
+
+  let stats = load(STORE_KEY, {});
+  const settings = Object.assign({ grades: [1], mode: "meaning", count: 10 }, load(SETTINGS_KEY, {}));
+
+  function record(word, ok) {
+    const s = stats[word.id] || { s: 0, c: 0, w: 0, st: 0, t: 0 };
+    s.s++;
+    if (ok) { s.c++; s.st++; }
+    else { s.w++; s.st = 0; s.t = Date.now(); }
+    stats[word.id] = s;
+    save(STORE_KEY, stats);
+  }
+
+  function needsReview(word) {
+    const s = stats[word.id];
+    return !!s && s.w > 0 && s.st < MASTER_STREAK;
+  }
+
+  function reviewWords() {
+    return WORDS.filter(needsReview).sort((a, b) => {
+      const sa = stats[a.id], sb = stats[b.id];
+      return sb.w - sa.w || sb.t - sa.t;
+    });
+  }
+
+  // ---------------------------------------------------------------
+  //  도우미
+  // ---------------------------------------------------------------
+  const $ = (id) => document.getElementById(id);
 
   function shuffle(arr) {
     const a = arr.slice();
@@ -203,142 +2479,483 @@
     return a;
   }
 
-  function makeQuestions() {
-    const total = Math.min(QUESTION_COUNT, WORDS.length);
-    const allMeanings = [...new Set(WORDS.map((w) => w[1]))];
-    return shuffle(WORDS).slice(0, total).map(([en, ko]) => {
-      const others = shuffle(allMeanings.filter((m) => m !== ko)).slice(0, 3);
-      return { en, ko, choices: shuffle([ko, ...others]) };
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // 예문을 HTML로: 연습 단어는 굵게, 또는 빈칸으로
+  function sentenceHTML(word, blank) {
+    return esc(word.sen).replace(/\[([^\]]+)\]/, (_, t) =>
+      blank ? `<span class="blank">${"_".repeat(Math.max(6, t.length))}</span>` : `<b>${t}</b>`
+    ).replace(/[\[\]]/g, "");
+  }
+  function plainSentence(word) { return word.sen.replace(/[\[\]]/g, ""); }
+
+  function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 0.85;
+    speechSynthesis.speak(u);
+  }
+  function speakBtn(text) {
+    const b = document.createElement("button");
+    b.className = "speak";
+    b.type = "button";
+    b.title = "발음 듣기";
+    b.textContent = "🔊";
+    b.addEventListener("click", (e) => { e.stopPropagation(); speak(text); });
+    return b;
+  }
+
+  function show(id) {
+    ["home", "quiz", "result", "list"].forEach((s) => $(s).classList.toggle("hidden", s !== id));
+    window.scrollTo(0, 0);
+  }
+
+  // ---------------------------------------------------------------
+  //  홈 화면
+  // ---------------------------------------------------------------
+  const MODES = [
+    { id: "meaning", name: "뜻 고르기", desc: "영어 → 한국어 뜻" },
+    { id: "blank", name: "문장 빈칸", desc: "예문에 맞는 단어 고르기" },
+    { id: "spell", name: "문장 쓰기", desc: "예문 속 단어 직접 쓰기" },
+    { id: "mix", name: "섞어서", desc: "세 가지를 골고루" },
+  ];
+  const MODE_NAME = { meaning: "뜻 고르기", blank: "문장 빈칸", spell: "문장 쓰기" };
+  const COUNTS = [10, 20, 30];
+
+  function gradeWords(g) { return WORDS.filter((w) => w.grade === g); }
+
+  function renderHome() {
+    const n = [1, 2, 3].map((g) => gradeWords(g).length);
+    $("totalText").textContent = `총 ${WORDS.length}단어 · 1학년 ${n[0]} · 2학년 ${n[1]} · 3학년 ${n[2]}`;
+
+    const gc = $("gradeChips");
+    gc.innerHTML = "";
+    [1, 2, 3].forEach((g, i) => {
+      const b = document.createElement("button");
+      b.className = "chip" + (settings.grades.includes(g) ? " on" : "");
+      b.innerHTML = `${g}학년<small>${n[i]}단어</small>`;
+      b.addEventListener("click", () => {
+        const has = settings.grades.includes(g);
+        if (has && settings.grades.length === 1) return; // 최소 하나는 선택
+        settings.grades = has ? settings.grades.filter((x) => x !== g) : [...settings.grades, g].sort();
+        save(SETTINGS_KEY, settings);
+        renderHome();
+      });
+      gc.appendChild(b);
+    });
+
+    const mc = $("modeChips");
+    mc.innerHTML = "";
+    MODES.forEach((m) => {
+      const b = document.createElement("button");
+      b.className = "chip" + (settings.mode === m.id ? " on" : "");
+      b.innerHTML = `${m.name}<small>${m.desc}</small>`;
+      b.addEventListener("click", () => { settings.mode = m.id; save(SETTINGS_KEY, settings); renderHome(); });
+      mc.appendChild(b);
+    });
+
+    const cc = $("countChips");
+    cc.innerHTML = "";
+    COUNTS.forEach((c) => {
+      const b = document.createElement("button");
+      b.className = "chip" + (settings.count === c ? " on" : "");
+      b.textContent = `${c}문제`;
+      b.addEventListener("click", () => { settings.count = c; save(SETTINGS_KEY, settings); renderHome(); });
+      cc.appendChild(b);
+    });
+
+    const rv = reviewWords().length;
+    $("reviewBtn").textContent = rv ? `🔁 자주 틀린 단어 복습 (${rv}개)` : "🔁 자주 틀린 단어 복습 (아직 없음)";
+    $("reviewBtn").disabled = rv === 0;
+
+    const pb = $("progressBox");
+    pb.innerHTML = "";
+    [1, 2, 3].forEach((g, i) => {
+      const words = gradeWords(g);
+      const done = words.filter((w) => stats[w.id] && stats[w.id].c > 0).length;
+      const pct = words.length ? Math.round((done / words.length) * 100) : 0;
+      const row = document.createElement("div");
+      row.className = "progress-row";
+      row.innerHTML = `<span class="label">${g}학년</span><div class="meter"><div style="width:${pct}%"></div></div><span class="num">${done} / ${words.length}</span>`;
+      pb.appendChild(row);
     });
   }
 
-  function show(sectionId) {
-    ["start", "quiz", "result"].forEach((id) => $(id).classList.toggle("hidden", id !== sectionId));
+  // ---------------------------------------------------------------
+  //  문제 만들기
+  // ---------------------------------------------------------------
+  let session = null;
+
+  // 덜 푼 단어 → 많이 틀린 단어 순으로 우선 뽑기
+  function pickNewWords(grades, count) {
+    const pool = WORDS.filter((w) => grades.includes(w.grade));
+    const scored = shuffle(pool).map((w) => {
+      const s = stats[w.id];
+      return { w, k: s ? s.c : -1 };
+    });
+    scored.sort((a, b) => a.k - b.k);
+    return shuffle(scored.slice(0, count).map((x) => x.w));
   }
 
-  function startQuiz() {
-    if (WORDS.length < 4) {
-      alert("단어를 4개 이상 넣어 주세요!");
-      return;
+  function chooseType(word, mode) {
+    const types = word.sen ? ["meaning", "blank", "spell"] : ["meaning"];
+    if (mode === "mix") return types[Math.floor(Math.random() * types.length)];
+    return types.includes(mode) ? mode : "meaning";
+  }
+
+  function distractors(word, count, getValue) {
+    const answer = getValue(word);
+    const sameGrade = shuffle(WORDS.filter((w) => w.grade === word.grade && w.id !== word.id));
+    const others = shuffle(WORDS.filter((w) => w.grade !== word.grade && w.id !== word.id));
+    const out = [];
+    for (const w of [...sameGrade, ...others]) {
+      const v = getValue(w);
+      if (v && v.toLowerCase() !== answer.toLowerCase() && !out.some((o) => o.toLowerCase() === v.toLowerCase())) out.push(v);
+      if (out.length === count) break;
     }
-    questions = makeQuestions();
-    current = 0;
-    score = 0;
-    wrongs = [];
+    return out;
+  }
+
+  function buildQuestion(word, mode) {
+    const type = chooseType(word, mode);
+    const q = { word, type };
+    if (type === "meaning") {
+      q.answer = word.ko;
+      q.choices = shuffle([word.ko, ...distractors(word, 3, (w) => w.ko)]);
+    } else if (type === "blank") {
+      q.answer = word.target;
+      q.choices = shuffle([word.target, ...distractors(word, 3, (w) => (w.sen ? w.target : w.en))]);
+    } else {
+      q.answer = word.target;
+    }
+    return q;
+  }
+
+  function startSession(words, kind) {
+    if (!words.length) return;
+    session = {
+      kind, // "new" | "review" | "retry"
+      questions: words.map((w) => buildQuestion(w, settings.mode)),
+      current: 0,
+      score: 0,
+      wrongs: [],
+      answered: false,
+    };
     show("quiz");
     renderQuestion();
   }
 
+  function startNew() {
+    if (WORDS.length < 4) { alert("단어를 4개 이상 넣어 주세요!"); return; }
+    startSession(pickNewWords(settings.grades, settings.count), "new");
+  }
+  function startReview() {
+    const list = reviewWords();
+    // 많이 틀린 단어부터, 순서는 섞어서
+    startSession(shuffle(list.slice(0, settings.count)), "review");
+  }
+
+  // ---------------------------------------------------------------
+  //  문제 화면
+  // ---------------------------------------------------------------
   function renderQuestion() {
-    const q = questions[current];
-    answered = false;
-    $("progressText").textContent = `${current + 1} / ${questions.length}`;
-    $("scoreText").textContent = `점수 ${score}`;
-    $("progressBar").style.width = `${(current / questions.length) * 100}%`;
-    $("word").textContent = q.en;
+    const q = session.questions[session.current];
+    const total = session.questions.length;
+    session.answered = false;
+
+    $("progressText").textContent = `${session.current + 1} / ${total}`;
+    $("scoreText").textContent = `맞힘 ${session.score}`;
+    $("progressBar").style.width = `${(session.current / total) * 100}%`;
     $("feedback").textContent = "";
     $("feedback").className = "feedback";
+    $("explain").classList.add("hidden");
     $("nextBtn").classList.add("hidden");
 
-    const box = $("choices");
+    const box = $("qbox");
     box.innerHTML = "";
-    q.choices.forEach((meaning, i) => {
-      const btn = document.createElement("button");
-      btn.className = "choice";
-      btn.innerHTML = `<span class="num">${i + 1}</span>`;
-      btn.append(meaning);
-      btn.addEventListener("click", () => choose(i));
-      box.appendChild(btn);
+
+    const head = document.createElement("div");
+    head.className = "qhead";
+    const tags = [`<span class="tag">${q.word.grade}학년 · ${MODE_NAME[q.type]}</span>`];
+    if (session.kind === "review") {
+      const s = stats[q.word.id];
+      tags.push(`<span class="tag review">틀린 횟수 ${s ? s.w : 0}</span>`);
+    }
+    head.innerHTML = tags.join(" ");
+    box.appendChild(head);
+
+    if (q.type === "meaning") {
+      const w = document.createElement("div");
+      w.className = "word";
+      w.textContent = q.word.en + " ";
+      w.appendChild(speakBtn(q.word.en));
+      box.appendChild(w);
+      const h = document.createElement("p");
+      h.className = "hint";
+      h.textContent = "알맞은 뜻을 고르세요 (키보드 1~4)";
+      box.appendChild(h);
+      box.appendChild(choiceButtons(q));
+    } else {
+      const s = document.createElement("p");
+      s.className = "sentence";
+      s.innerHTML = sentenceHTML(q.word, true);
+      box.appendChild(s);
+      const t = document.createElement("p");
+      t.className = "trans";
+      t.textContent = q.word.tr;
+      box.appendChild(t);
+
+      if (q.type === "blank") {
+        const h = document.createElement("p");
+        h.className = "hint";
+        h.textContent = "빈칸에 알맞은 단어를 고르세요 (키보드 1~4)";
+        box.insertBefore(h, s);
+        box.appendChild(choiceButtons(q));
+      } else {
+        const hint = document.createElement("div");
+        hint.className = "spell-hint";
+        hint.textContent = q.answer.split("").map((ch, i) => (i === 0 || ch === " " || ch === "-" ? ch : "_")).join(" ").replace(/ {3}/g, "   ");
+        const h = document.createElement("p");
+        h.className = "hint";
+        h.textContent = `뜻: ${q.word.ko} · 빈칸에 들어갈 단어를 써 보세요`;
+        box.appendChild(h);
+        box.appendChild(hint);
+        const row = document.createElement("form");
+        row.className = "spell-row";
+        row.innerHTML = `<input id="spellInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="영어로 쓰기"><button class="btn" type="submit">확인</button>`;
+        row.addEventListener("submit", (e) => { e.preventDefault(); checkSpelling(); });
+        box.appendChild(row);
+        setTimeout(() => $("spellInput").focus(), 0);
+      }
+    }
+  }
+
+  function choiceButtons(q) {
+    const wrap = document.createElement("div");
+    wrap.className = "choices";
+    q.choices.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.innerHTML = `<span class="num">${i + 1}</span>`;
+      b.append(c);
+      b.addEventListener("click", () => choose(i));
+      wrap.appendChild(b);
     });
+    return wrap;
   }
 
   function choose(index) {
-    if (answered) return;
-    answered = true;
-    const q = questions[current];
+    if (session.answered) return;
+    const q = session.questions[session.current];
     const picked = q.choices[index];
-    const buttons = $("choices").querySelectorAll(".choice");
-
-    buttons.forEach((btn, i) => {
-      btn.disabled = true;
-      if (q.choices[i] === q.ko) btn.classList.add("correct");
+    const ok = picked === q.answer;
+    $("qbox").querySelectorAll(".choice").forEach((b, i) => {
+      b.disabled = true;
+      if (q.choices[i] === q.answer) b.classList.add("correct");
+      else if (i === index) b.classList.add("wrong");
     });
+    finishAnswer(q, ok, picked);
+  }
 
-    if (picked === q.ko) {
-      score++;
-      $("feedback").textContent = "⭕ 정답이에요!";
-      $("feedback").className = "feedback ok";
+  function normalize(s) {
+    return s.toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ").trim();
+  }
+
+  function checkSpelling() {
+    if (session.answered) return;
+    const q = session.questions[session.current];
+    const input = $("spellInput");
+    const typed = input.value;
+    if (!typed.trim()) { input.focus(); return; }
+    const ok = normalize(typed) === normalize(q.answer);
+    input.disabled = true;
+    input.classList.add(ok ? "correct" : "wrong");
+    $("qbox").querySelector(".spell-row button").disabled = true;
+    // 빈칸 자리에 정답 보여 주기
+    $("qbox").querySelector(".sentence").innerHTML = sentenceHTML(q.word, false);
+    finishAnswer(q, ok, typed.trim());
+  }
+
+  function finishAnswer(q, ok, picked) {
+    session.answered = true;
+    record(q.word, ok);
+    const fb = $("feedback");
+    if (ok) {
+      session.score++;
+      fb.textContent = "⭕ 정답이에요!";
+      fb.className = "feedback ok";
     } else {
-      buttons[index].classList.add("wrong");
-      wrongs.push({ en: q.en, ko: q.ko, mine: picked });
-      $("feedback").textContent = `❌ 틀렸어요. 정답은 "${q.ko}"`;
-      $("feedback").className = "feedback no";
+      session.wrongs.push({ word: q.word, mine: picked });
+      fb.textContent = `❌ 틀렸어요. 정답은 "${q.answer}"`;
+      fb.className = "feedback no";
     }
-    $("scoreText").textContent = `점수 ${score}`;
-    $("progressBar").style.width = `${((current + 1) / questions.length) * 100}%`;
+    $("scoreText").textContent = `맞힘 ${session.score}`;
+    $("progressBar").style.width = `${((session.current + 1) / session.questions.length) * 100}%`;
+    renderExplain(q.word);
 
-    const last = current === questions.length - 1;
+    const last = session.current === session.questions.length - 1;
     $("nextBtn").textContent = last ? "결과 보기" : "다음 문제";
     $("nextBtn").classList.remove("hidden");
-    $("nextBtn").focus();
+    setTimeout(() => $("nextBtn").focus(), 0);
+  }
+
+  // 답한 뒤: 단어 + 뜻 + 예문(해석)으로 문장 연습
+  function renderExplain(word) {
+    const ex = $("explain");
+    ex.innerHTML = "";
+    const l1 = document.createElement("div");
+    l1.className = "line1";
+    l1.innerHTML = `<span class="en">${esc(word.en)}</span><span>${esc(word.ko)}</span>`;
+    l1.prepend(speakBtn(word.en));
+    ex.appendChild(l1);
+    if (word.sen) {
+      const row = document.createElement("div");
+      row.className = "ex";
+      const p = document.createElement("p");
+      p.innerHTML = `${sentenceHTML(word, false)}<br><span class="kr">${esc(word.tr)}</span>`;
+      row.append(speakBtn(plainSentence(word)), p);
+      ex.appendChild(row);
+    }
+    ex.classList.remove("hidden");
   }
 
   function next() {
-    current++;
-    if (current < questions.length) renderQuestion();
+    session.current++;
+    if (session.current < session.questions.length) renderQuestion();
     else showResult();
   }
 
+  // ---------------------------------------------------------------
+  //  결과 화면
+  // ---------------------------------------------------------------
   function showResult() {
     show("result");
-    const total = questions.length;
-    $("finalScore").textContent = `${score} / ${total}`;
-    const ratio = score / total;
+    const total = session.current >= session.questions.length ? session.questions.length : session.current + (session.answered ? 1 : 0);
+    $("finalScore").textContent = `${session.score} / ${total}`;
+    const ratio = total ? session.score / total : 0;
     $("finalMsg").textContent =
-      ratio === 1 ? "🏆 만점! 정말 대단해요!" :
+      total === 0 ? "다음에 다시 도전해요!" :
+      ratio === 1 ? "🏆 다 맞혔어요! 정말 대단해요!" :
       ratio >= 0.8 ? "👏 아주 잘했어요!" :
       ratio >= 0.5 ? "🙂 좋아요, 조금만 더 연습해 봐요!" :
                      "💪 틀린 단어를 복습하고 다시 도전해요!";
 
     const box = $("wrongBox");
     box.innerHTML = "";
-    if (wrongs.length === 0) {
+    if (total > 0 && session.wrongs.length === 0) {
       box.innerHTML = '<p class="perfect">틀린 단어가 없어요! 🎉</p>';
-      return;
+    } else if (session.wrongs.length) {
+      const h = document.createElement("h2");
+      h.textContent = `틀린 단어 (${session.wrongs.length}개)`;
+      box.appendChild(h);
+      box.appendChild(wordListEl(session.wrongs.map((x) => x.word), session.wrongs.map((x) => x.mine)));
+      const note = document.createElement("div");
+      note.className = "review-note";
+      note.textContent = "틀린 단어는 '자주 틀린 단어 복습'에 저장됐어요. 복습에서 2번 연속 맞히면 목록에서 빠져요.";
+      box.appendChild(note);
     }
-    const h = document.createElement("h2");
-    h.textContent = `틀린 단어 (${wrongs.length}개)`;
-    const ul = document.createElement("ul");
-    ul.className = "wrong-list";
-    wrongs.forEach((w) => {
-      const li = document.createElement("li");
-      const left = document.createElement("span");
-      left.className = "en";
-      left.textContent = w.en;
-      const right = document.createElement("span");
-      right.style.textAlign = "right";
-      right.textContent = w.ko;
-      const mine = document.createElement("div");
-      mine.className = "mine";
-      mine.textContent = `내 답: ${w.mine}`;
-      right.appendChild(mine);
-      li.append(left, right);
-      ul.appendChild(li);
-    });
-    box.append(h, ul);
+    $("retryWrongBtn").disabled = session.wrongs.length === 0;
   }
 
-  $("startBtn").addEventListener("click", startQuiz);
-  $("retryBtn").addEventListener("click", startQuiz);
+  // ---------------------------------------------------------------
+  //  단어 목록 (결과 화면 / 단어장 공용)
+  // ---------------------------------------------------------------
+  function wordListEl(words, mines) {
+    const ul = document.createElement("ul");
+    ul.className = "wlist";
+    words.forEach((w, i) => {
+      const s = stats[w.id];
+      const li = document.createElement("li");
+      if (mines || needsReview(w)) li.className = "bad";
+      const row = document.createElement("div");
+      row.className = "row1";
+      row.appendChild(speakBtn(w.en));
+      row.insertAdjacentHTML("beforeend",
+        `<span class="en">${esc(w.en)}</span><span class="ko">${esc(w.ko)}</span>` +
+        `<span class="badge">${w.grade}학년</span>` +
+        (s && s.w ? `<span class="badge miss">${s.w}번 틀림</span>` : ""));
+      li.appendChild(row);
+      if (mines) {
+        const m = document.createElement("div");
+        m.className = "mine";
+        m.textContent = `내 답: ${mines[i]}`;
+        li.appendChild(m);
+      }
+      if (w.sen) {
+        const ex = document.createElement("div");
+        ex.className = "ex";
+        ex.innerHTML = `${sentenceHTML(w, false)}<span class="kr">${esc(w.tr)}</span>`;
+        li.appendChild(ex);
+      }
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  const LIST_PAGE = 100;
+  let listLimit = LIST_PAGE;
+
+  function renderList() {
+    const g = Number($("listGrade").value);
+    const qText = $("listSearch").value.trim().toLowerCase();
+    const missOnly = $("listMissOnly").checked;
+    let words = WORDS.filter((w) =>
+      (!g || w.grade === g) &&
+      (!qText || w.en.toLowerCase().includes(qText) || w.ko.includes(qText)) &&
+      (!missOnly || (stats[w.id] && stats[w.id].w > 0))
+    );
+    if (missOnly) words.sort((a, b) => stats[b.id].w - stats[a.id].w);
+    $("listCount").textContent = `${words.length}개 단어`;
+    const ul = $("wordList");
+    ul.replaceWith(Object.assign(wordListEl(words.slice(0, listLimit)), { id: "wordList" }));
+    const more = $("listMore");
+    more.innerHTML = "";
+    if (words.length > listLimit) {
+      const b = document.createElement("button");
+      b.className = "btn ghost";
+      b.textContent = `더 보기 (${words.length - listLimit}개 남음)`;
+      b.addEventListener("click", () => { listLimit += LIST_PAGE; renderList(); });
+      more.appendChild(b);
+    }
+  }
+  function resetListAndRender() { listLimit = LIST_PAGE; renderList(); }
+
+  // ---------------------------------------------------------------
+  //  버튼 연결
+  // ---------------------------------------------------------------
+  $("startBtn").addEventListener("click", startNew);
+  $("reviewBtn").addEventListener("click", startReview);
+  $("listBtn").addEventListener("click", () => { show("list"); resetListAndRender(); });
+  $("listBackBtn").addEventListener("click", () => { renderHome(); show("home"); });
   $("nextBtn").addEventListener("click", next);
+  $("quitBtn").addEventListener("click", showResult);
+  $("homeBtn").addEventListener("click", () => { renderHome(); show("home"); });
+  $("againBtn").addEventListener("click", () => (session.kind === "review" && reviewWords().length ? startReview() : startNew()));
+  $("retryWrongBtn").addEventListener("click", () => startSession(shuffle(session.wrongs.map((x) => x.word)), "retry"));
+  $("listGrade").addEventListener("change", resetListAndRender);
+  $("listSearch").addEventListener("input", resetListAndRender);
+  $("listMissOnly").addEventListener("change", resetListAndRender);
+  $("resetBtn").addEventListener("click", () => {
+    if (!confirm("지금까지의 학습 기록과 틀린 단어 기록을 모두 지울까요?")) return;
+    stats = {};
+    save(STORE_KEY, stats);
+    resetListAndRender();
+  });
 
   document.addEventListener("keydown", (e) => {
-    if ($("quiz").classList.contains("hidden")) return;
-    if (!answered && ["1", "2", "3", "4"].includes(e.key)) {
+    if ($("quiz").classList.contains("hidden") || !session) return;
+    const q = session.questions[session.current];
+    if (!session.answered && q.type !== "spell" && ["1", "2", "3", "4"].includes(e.key)) {
       const i = Number(e.key) - 1;
-      if (i < questions[current].choices.length) choose(i);
+      if (i < q.choices.length) choose(i);
     }
   });
+
+  renderHome();
 </script>
 </body>
 </html>
