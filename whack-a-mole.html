@@ -96,7 +96,35 @@
     box-shadow: 0 5px 0 rgba(0,0,0,.08);
     text-align: center;
   }
-  .pill .label { font-size: 14px; opacity: .7; }
+  .pill .label { font-size: 14px; opacity: .7; white-space: nowrap; }
+  #level.up { animation: levelPop .5s cubic-bezier(.3, 1.6, .6, 1); color: var(--pink); }
+  @keyframes levelPop { from { transform: scale(1.8); } to { transform: scale(1); } }
+
+  /* 단계 상승 배너 */
+  .banner {
+    position: absolute;
+    left: 50%; top: 50%;
+    z-index: 15;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    color: var(--pink);
+    font-weight: 900;
+    font-size: clamp(22px, 6vw, 32px);
+    padding: 12px 26px;
+    border-radius: 99px;
+    box-shadow: 0 6px 0 #ffd6e8, 0 12px 24px rgba(0,0,0,.15);
+    white-space: nowrap;
+    pointer-events: none;
+    animation: bannerIn 1.4s ease-out forwards;
+  }
+  .banner small { display: block; font-size: 15px; color: var(--text); text-align: center; }
+  @keyframes bannerIn {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(.4); }
+    15%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    25%  { transform: translate(-50%, -50%) scale(1); }
+    80%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+  }
   .pill .value { font-size: 30px; font-weight: 800; line-height: 1.1; }
   #time.warn { color: #ff4d6d; animation: pulse .5s ease-in-out infinite alternate; }
   @keyframes pulse { to { transform: scale(1.15); } }
@@ -121,7 +149,9 @@
     position: relative;
     z-index: 1;
     width: min(460px, 100%);
-    aspect-ratio: 1 / 1;
+    --cols: 3;
+    --rows: 3;
+    aspect-ratio: var(--cols) / var(--rows);
     background:
       radial-gradient(circle at 20% 15%, #a6e07f 0 8%, transparent 9%),
       radial-gradient(circle at 80% 85%, #a6e07f 0 7%, transparent 8%),
@@ -130,10 +160,11 @@
     border: 6px solid var(--grass-dark);
     box-shadow: 0 10px 0 var(--grass-dark), 0 18px 30px rgba(0,0,0,.15);
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 4%;
-    padding: 6%;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-template-rows: repeat(var(--rows), 1fr);
+    gap: calc(12% / var(--cols));
+    padding: calc(18% / var(--cols));
+    transition: aspect-ratio .3s;
     cursor: pointer;
   }
 
@@ -160,7 +191,7 @@
     height: 34%;
     background: radial-gradient(ellipse at 50% 35%, #2e1c10 0 55%, var(--hole) 70%);
     border-radius: 50%;
-    border: 4px solid var(--hole-rim);
+    border: 3px solid var(--hole-rim);
     z-index: 1;
   }
   /* 구멍 앞쪽 흙 테두리: 두더지 몸 아래를 가림 */
@@ -370,6 +401,10 @@
 
   <div class="hud">
     <div class="pill">
+      <div class="label">🚩 단계</div>
+      <div class="value" id="level">1</div>
+    </div>
+    <div class="pill">
       <div class="label">⏰ 남은 시간</div>
       <div class="value" id="time">30</div>
       <div class="timebar"><div id="bar"></div></div>
@@ -386,6 +421,8 @@
         <h2>두더지를 잡아라!</h2>
         <p>튀어나온 두더지를 클릭하면 <b>+10점</b></p>
         <p>제한 시간은 <b>30초</b>예요</p>
+        <p><b>50점</b>마다 단계 UP! (최대 10단계)</p>
+        <p>단계가 오르면 구멍이 늘고 더 빨라져요<br>대신 <b>+5초</b> 보너스!</p>
         <button id="startBtn">시작하기</button>
       </div>
     </div>
@@ -395,6 +432,7 @@
         <h2>⏱️ 시간 끝!</h2>
         <p>최종 점수</p>
         <div class="final" id="finalScore">0</div>
+        <p id="finalLevel"></p>
         <div class="best" id="bestText"></div>
         <button id="retryBtn">다시 하기</button>
       </div>
@@ -406,61 +444,94 @@
 <script>
   const GAME_TIME = 30;
   const POINTS = 10;
+  const LEVEL_STEP = 50;   // 50점마다 단계 상승
+  const MAX_LEVEL = 10;
+  const TIME_BONUS = 5;    // 단계가 오를 때 추가되는 시간(초)
 
   const board = document.getElementById('board');
+  const levelEl = document.getElementById('level');
   const timeEl = document.getElementById('time');
   const barEl = document.getElementById('bar');
   const scoreEl = document.getElementById('score');
   const startOverlay = document.getElementById('startOverlay');
   const endOverlay = document.getElementById('endOverlay');
   const finalScoreEl = document.getElementById('finalScore');
+  const finalLevelEl = document.getElementById('finalLevel');
   const bestText = document.getElementById('bestText');
 
-  // 3×3 구멍 만들기
-  const moles = [];
-  for (let i = 0; i < 9; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.innerHTML = `
-      <div class="hole"></div>
-      <div class="pit">
-        <div class="mole">
-          <div class="stars">⭐💫⭐</div>
-          <div class="body"></div>
-          <div class="belly"></div>
-          <div class="eye l"></div><div class="eye r"></div>
-          <div class="cheek l"></div><div class="cheek r"></div>
-          <div class="nose"></div>
-          <div class="teeth"></div>
-        </div>
-      </div>
-      <div class="rim-front"></div>`;
-    board.appendChild(cell);
-
-    const mole = cell.querySelector('.mole');
-    const state = { el: mole, cell, up: false, hideTimer: null };
-    mole.addEventListener('pointerdown', (e) => whack(state, e));
-    moles.push(state);
+  // 단계별 칸 수: 3×3 → 4×3 → 4×4 → … → 8×7 (가로·세로를 번갈아 하나씩 늘림)
+  function gridSize(level) {
+    return { cols: 3 + Math.floor(level / 2), rows: 3 + Math.floor((level - 1) / 2) };
   }
 
+  // 단계별 속도: 등장 간격과 머무는 시간이 짧아지고, 동시에 나오는 수가 늘어남
+  function speed(level) {
+    const t = (level - 1) / (MAX_LEVEL - 1);
+    return {
+      interval: 900 - t * 580,                 // 900ms → 320ms
+      stay: 1150 - t * 650,                    // 1150ms → 500ms
+      maxUp: 1 + Math.floor((level - 1) / 2),  // 1마리 → 5마리
+      doubleChance: Math.max(0, (level - 3) * 0.07),
+    };
+  }
+
+  let moles = [];
   let score = 0;
+  let level = 1;
   let timeLeft = GAME_TIME;
   let playing = false;
   let endAt = 0;
   let tickTimer = null;
   let spawnTimer = null;
 
+  function buildBoard(lv) {
+    moles.forEach(m => clearTimeout(m.hideTimer));
+    board.querySelectorAll('.cell').forEach(c => c.remove());
+    moles = [];
+
+    const { cols, rows } = gridSize(lv);
+    board.style.setProperty('--cols', cols);
+    board.style.setProperty('--rows', rows);
+
+    for (let i = 0; i < cols * rows; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.innerHTML = `
+        <div class="hole"></div>
+        <div class="pit">
+          <div class="mole">
+            <div class="stars">⭐💫⭐</div>
+            <div class="body"></div>
+            <div class="belly"></div>
+            <div class="eye l"></div><div class="eye r"></div>
+            <div class="cheek l"></div><div class="cheek r"></div>
+            <div class="nose"></div>
+            <div class="teeth"></div>
+          </div>
+        </div>
+        <div class="rim-front"></div>`;
+      board.appendChild(cell);
+
+      const mole = cell.querySelector('.mole');
+      const state = { el: mole, cell, up: false, hideTimer: null };
+      mole.addEventListener('pointerdown', (e) => whack(state, e));
+      moles.push(state);
+    }
+  }
+
   function startGame() {
     score = 0;
+    level = 1;
     timeLeft = GAME_TIME;
     playing = true;
     scoreEl.textContent = 0;
+    levelEl.textContent = 1;
     timeEl.textContent = GAME_TIME;
     timeEl.classList.remove('warn');
     barEl.style.width = '100%';
     startOverlay.classList.add('hidden');
     endOverlay.classList.add('hidden');
-    moles.forEach(hide);
+    buildBoard(level);
 
     endAt = performance.now() + GAME_TIME * 1000;
     tickTimer = setInterval(tick, 100);
@@ -475,35 +546,30 @@
       timeEl.textContent = timeLeft;
       timeEl.classList.toggle('warn', timeLeft <= 5 && timeLeft > 0);
     }
-    barEl.style.width = (remaining / GAME_TIME * 100) + '%';
+    barEl.style.width = Math.min(1, remaining / GAME_TIME) * 100 + '%';
     if (remaining <= 0) endGame();
-  }
-
-  // 시간이 지날수록 조금씩 빨라짐
-  function progress() {
-    return 1 - Math.max(0, (endAt - performance.now()) / (GAME_TIME * 1000));
   }
 
   function scheduleSpawn(delay) {
     spawnTimer = setTimeout(() => {
       if (!playing) return;
+      const sp = speed(level);
       spawn();
-      const p = progress();
-      // 후반에는 가끔 두 마리가 동시에 나옴
-      if (p > 0.5 && Math.random() < 0.3) spawn();
-      scheduleSpawn(rand(650, 1000) - p * 350);
+      if (Math.random() < sp.doubleChance) spawn();
+      scheduleSpawn(rand(sp.interval * 0.8, sp.interval * 1.2));
     }, delay);
   }
 
   function spawn() {
+    const sp = speed(level);
+    if (moles.filter(m => m.up).length >= sp.maxUp) return;
     const free = moles.filter(m => !m.up);
     if (!free.length) return;
     const m = free[Math.floor(Math.random() * free.length)];
     m.up = true;
     m.el.classList.remove('hit');
     m.el.classList.add('up');
-    const stay = rand(750, 1200) - progress() * 400;
-    m.hideTimer = setTimeout(() => hide(m), stay);
+    m.hideTimer = setTimeout(() => hide(m), rand(sp.stay * 0.8, sp.stay * 1.2));
   }
 
   function hide(m) {
@@ -527,6 +593,30 @@
     board.classList.remove('shake');
     void board.offsetWidth;
     board.classList.add('shake');
+
+    const next = Math.min(MAX_LEVEL, Math.floor(score / LEVEL_STEP) + 1);
+    if (next > level) levelUp(next);
+  }
+
+  function levelUp(next) {
+    level = next;
+    levelEl.textContent = level;
+    levelEl.classList.remove('up');
+    void levelEl.offsetWidth;
+    levelEl.classList.add('up');
+
+    endAt += TIME_BONUS * 1000;
+    tick();
+
+    // 잡힌 두더지 애니메이션이 끝난 뒤 판을 넓힘
+    setTimeout(() => { if (playing) buildBoard(level); }, 250);
+
+    const banner = document.createElement('div');
+    banner.className = 'banner';
+    banner.innerHTML = (level === MAX_LEVEL ? '👑 마지막 단계! 👑' : `🎉 ${level}단계! 🎉`)
+      + `<small>⏰ +${TIME_BONUS}초 보너스</small>`;
+    board.appendChild(banner);
+    banner.addEventListener('animationend', () => banner.remove());
   }
 
   function showPop(cell) {
@@ -559,11 +649,15 @@
     }
 
     finalScoreEl.textContent = score;
+    finalLevelEl.textContent = level === MAX_LEVEL
+      ? '👑 최종 10단계 도달!'
+      : `🚩 ${level}단계까지 도달`;
     endOverlay.classList.remove('hidden');
   }
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
+  buildBoard(1);
   document.getElementById('startBtn').addEventListener('click', startGame);
   document.getElementById('retryBtn').addEventListener('click', startGame);
 </script>
