@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>
+  // ================================================================
+  //  📚 단어 목록 — 여기만 고치면 됩니다!
+  //  형식: ["영어 단어", "한국어 뜻"],
+  //  · 10개 이상 넣어 주세요. (많을수록 매번 다른 문제가 나와요)
+  //  · 오답 보기는 다른 단어들의 뜻에서 자동으로 골라요.
+  // ================================================================
+  const WORDS = [
+    ["apple", "사과"],
+    ["library", "도서관"],
+    ["borrow", "빌리다"],
+    ["weather", "날씨"],
+    ["important", "중요한"],
+    ["remember", "기억하다"],
+    ["dangerous", "위험한"],
+    ["neighbor", "이웃"],
+    ["arrive", "도착하다"],
+    ["festival", "축제"],
+    ["healthy", "건강한"],
+    ["choose", "고르다"],
+    ["environment", "환경"],
+    ["invite", "초대하다"],
+    ["quiet", "조용한"],
+    ["practice", "연습하다"],
+    ["season", "계절"],
+    ["worry", "걱정하다"],
+    ["brave", "용감한"],
+    ["history", "역사"],
+  ];
+
+  const QUESTION_COUNT = 10; // 문제 수
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>영어 단어 퀴즈</title>
+<style>
+  :root {
+    --bg: #eef4ff;
+    --card: #ffffff;
+    --text: #1f2a44;
+    --muted: #6b7690;
+    --primary: #4a6cf7;
+    --primary-dark: #3553d4;
+    --border: #d5ddf0;
+    --correct: #1f9d55;
+    --correct-bg: #e3f7ec;
+    --wrong: #d64545;
+    --wrong-bg: #fde8e8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  .card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 28px 24px;
+    box-shadow: 0 10px 30px rgba(40, 60, 120, 0.12);
+  }
+  h1 { margin: 0 0 8px; font-size: 26px; text-align: center; }
+  .sub { margin: 0 0 24px; text-align: center; color: var(--muted); }
+  .top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 24px; }
+  .bar > div { height: 100%; background: var(--primary); width: 0; transition: width .3s; }
+  .word {
+    text-align: center;
+    font-size: 40px;
+    font-weight: 800;
+    margin: 8px 0 4px;
+    word-break: break-word;
+  }
+  .hint { text-align: center; color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+  .choices { display: grid; gap: 10px; }
+  .choice {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 18px;
+    text-align: left;
+    background: #fff;
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color .15s, background .15s;
+  }
+  .choice:hover:not(:disabled) { border-color: var(--primary); background: #f5f7ff; }
+  .choice:disabled { cursor: default; }
+  .choice .num { display: inline-block; width: 28px; color: var(--muted); font-weight: 700; }
+  .choice.correct { border-color: var(--correct); background: var(--correct-bg); color: var(--correct); font-weight: 700; }
+  .choice.wrong { border-color: var(--wrong); background: var(--wrong-bg); color: var(--wrong); font-weight: 700; }
+  .feedback {
+    min-height: 28px;
+    margin: 16px 0 8px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .feedback.ok { color: var(--correct); }
+  .feedback.no { color: var(--wrong); }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--primary);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .hidden { display: none !important; }
+  .score { text-align: center; font-size: 56px; font-weight: 800; color: var(--primary); margin: 8px 0; }
+  .msg { text-align: center; font-size: 18px; margin: 0 0 20px; }
+  .wrong-list { list-style: none; padding: 0; margin: 0 0 24px; }
+  .wrong-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--wrong-bg);
+    margin-bottom: 8px;
+  }
+  .wrong-list .en { font-weight: 800; }
+  .wrong-list .mine { color: var(--wrong); font-size: 13px; }
+  .perfect { text-align: center; color: var(--correct); font-weight: 700; margin: 0 0 24px; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- 시작 화면 -->
+  <section id="start">
+    <h1>📝 영어 단어 퀴즈</h1>
+    <p class="sub">영어 단어의 알맞은 뜻을 골라 보세요!</p>
+    <button class="btn" id="startBtn">시작하기</button>
+  </section>
+
+  <!-- 문제 화면 -->
+  <section id="quiz" class="hidden">
+    <div class="top">
+      <span id="progressText">1 / 10</span>
+      <span id="scoreText">점수 0</span>
+    </div>
+    <div class="bar"><div id="progressBar"></div></div>
+    <div class="word" id="word">word</div>
+    <p class="hint">알맞은 뜻을 고르세요 (키보드 1~4도 가능)</p>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn hidden" id="nextBtn">다음 문제</button>
+  </section>
+
+  <!-- 결과 화면 -->
+  <section id="result" class="hidden">
+    <h1>결과</h1>
+    <div class="score" id="finalScore">0 / 10</div>
+    <p class="msg" id="finalMsg"></p>
+    <div id="wrongBox"></div>
+    <button class="btn" id="retryBtn">다시 풀기</button>
+  </section>
+
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  let questions = [];
+  let current = 0;
+  let score = 0;
+  let wrongs = [];
+  let answered = false;
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function makeQuestions() {
+    const total = Math.min(QUESTION_COUNT, WORDS.length);
+    const allMeanings = [...new Set(WORDS.map((w) => w[1]))];
+    return shuffle(WORDS).slice(0, total).map(([en, ko]) => {
+      const others = shuffle(allMeanings.filter((m) => m !== ko)).slice(0, 3);
+      return { en, ko, choices: shuffle([ko, ...others]) };
+    });
+  }
+
+  function show(sectionId) {
+    ["start", "quiz", "result"].forEach((id) => $(id).classList.toggle("hidden", id !== sectionId));
+  }
+
+  function startQuiz() {
+    if (WORDS.length < 4) {
+      alert("단어를 4개 이상 넣어 주세요!");
+      return;
+    }
+    questions = makeQuestions();
+    current = 0;
+    score = 0;
+    wrongs = [];
+    show("quiz");
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const q = questions[current];
+    answered = false;
+    $("progressText").textContent = `${current + 1} / ${questions.length}`;
+    $("scoreText").textContent = `점수 ${score}`;
+    $("progressBar").style.width = `${(current / questions.length) * 100}%`;
+    $("word").textContent = q.en;
+    $("feedback").textContent = "";
+    $("feedback").className = "feedback";
+    $("nextBtn").classList.add("hidden");
+
+    const box = $("choices");
+    box.innerHTML = "";
+    q.choices.forEach((meaning, i) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.innerHTML = `<span class="num">${i + 1}</span>`;
+      btn.append(meaning);
+      btn.addEventListener("click", () => choose(i));
+      box.appendChild(btn);
+    });
+  }
+
+  function choose(index) {
+    if (answered) return;
+    answered = true;
+    const q = questions[current];
+    const picked = q.choices[index];
+    const buttons = $("choices").querySelectorAll(".choice");
+
+    buttons.forEach((btn, i) => {
+      btn.disabled = true;
+      if (q.choices[i] === q.ko) btn.classList.add("correct");
+    });
+
+    if (picked === q.ko) {
+      score++;
+      $("feedback").textContent = "⭕ 정답이에요!";
+      $("feedback").className = "feedback ok";
+    } else {
+      buttons[index].classList.add("wrong");
+      wrongs.push({ en: q.en, ko: q.ko, mine: picked });
+      $("feedback").textContent = `❌ 틀렸어요. 정답은 "${q.ko}"`;
+      $("feedback").className = "feedback no";
+    }
+    $("scoreText").textContent = `점수 ${score}`;
+    $("progressBar").style.width = `${((current + 1) / questions.length) * 100}%`;
+
+    const last = current === questions.length - 1;
+    $("nextBtn").textContent = last ? "결과 보기" : "다음 문제";
+    $("nextBtn").classList.remove("hidden");
+    $("nextBtn").focus();
+  }
+
+  function next() {
+    current++;
+    if (current < questions.length) renderQuestion();
+    else showResult();
+  }
+
+  function showResult() {
+    show("result");
+    const total = questions.length;
+    $("finalScore").textContent = `${score} / ${total}`;
+    const ratio = score / total;
+    $("finalMsg").textContent =
+      ratio === 1 ? "🏆 만점! 정말 대단해요!" :
+      ratio >= 0.8 ? "👏 아주 잘했어요!" :
+      ratio >= 0.5 ? "🙂 좋아요, 조금만 더 연습해 봐요!" :
+                     "💪 틀린 단어를 복습하고 다시 도전해요!";
+
+    const box = $("wrongBox");
+    box.innerHTML = "";
+    if (wrongs.length === 0) {
+      box.innerHTML = '<p class="perfect">틀린 단어가 없어요! 🎉</p>';
+      return;
+    }
+    const h = document.createElement("h2");
+    h.textContent = `틀린 단어 (${wrongs.length}개)`;
+    const ul = document.createElement("ul");
+    ul.className = "wrong-list";
+    wrongs.forEach((w) => {
+      const li = document.createElement("li");
+      const left = document.createElement("span");
+      left.className = "en";
+      left.textContent = w.en;
+      const right = document.createElement("span");
+      right.style.textAlign = "right";
+      right.textContent = w.ko;
+      const mine = document.createElement("div");
+      mine.className = "mine";
+      mine.textContent = `내 답: ${w.mine}`;
+      right.appendChild(mine);
+      li.append(left, right);
+      ul.appendChild(li);
+    });
+    box.append(h, ul);
+  }
+
+  $("startBtn").addEventListener("click", startQuiz);
+  $("retryBtn").addEventListener("click", startQuiz);
+  $("nextBtn").addEventListener("click", next);
+
+  document.addEventListener("keydown", (e) => {
+    if ($("quiz").classList.contains("hidden")) return;
+    if (!answered && ["1", "2", "3", "4"].includes(e.key)) {
+      const i = Number(e.key) - 1;
+      if (i < questions[current].choices.length) choose(i);
+    }
+  });
+</script>
+</body>
+</html>
