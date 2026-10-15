@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>발표자 뽑기</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --accent: #f59e0b;
+    --border: #e5e7eb;
+    --picked: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .app { width: 100%; max-width: 760px; }
+  h1 { text-align: center; margin: 0 0 20px; font-size: 2rem; }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+  }
+  .settings { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  label { display: block; font-weight: 700; margin-bottom: 6px; }
+  .stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper button {
+    width: 44px; height: 44px; font-size: 1.4rem; border-radius: 10px;
+    border: 1px solid var(--border); background: #fff; cursor: pointer;
+  }
+  .stepper input {
+    flex: 1; min-width: 0; height: 44px; font-size: 1.3rem; text-align: center;
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .option { margin-top: 14px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .option input { width: 18px; height: 18px; }
+  .actions { display: flex; gap: 10px; margin-top: 16px; }
+  .btn {
+    flex: 1; padding: 16px; font-size: 1.25rem; font-weight: 700;
+    border: none; border-radius: 12px; cursor: pointer;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
+  .btn-secondary { flex: 0 0 auto; background: #eef2ff; color: var(--primary); }
+  .result {
+    min-height: 180px; display: flex; flex-wrap: wrap; gap: 14px;
+    justify-content: center; align-items: center;
+  }
+  .result .placeholder { color: var(--muted); font-size: 1.1rem; }
+  .ball {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(145deg, var(--accent), #f97316);
+    color: #fff; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 3rem; font-weight: 800;
+    box-shadow: 0 6px 18px rgba(249,115,22,0.35);
+  }
+  .ball small { font-size: 0.95rem; font-weight: 600; opacity: 0.9; }
+  .ball.rolling { background: linear-gradient(145deg, #9ca3af, #6b7280); box-shadow: none; }
+  .ball.pop { animation: pop 0.4s ease; }
+  @keyframes pop { 0% { transform: scale(0.6); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  .status { text-align: center; color: var(--muted); margin-top: 10px; }
+  .grid-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .grid-title h2 { font-size: 1.1rem; margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; }
+  .seat {
+    height: 46px; border-radius: 8px; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; background: #fff; cursor: pointer; user-select: none;
+  }
+  .seat.done { background: var(--picked); color: #9ca3af; text-decoration: line-through; }
+  .seat.now { background: var(--accent); color: #fff; border-color: var(--accent); text-decoration: none; }
+  .hint { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+  @media (max-width: 560px) {
+    .settings { grid-template-columns: 1fr; }
+    .ball { width: 92px; height: 92px; font-size: 2.3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🎤 발표자 뽑기</h1>
+
+  <div class="card">
+    <div class="settings">
+      <div>
+        <label for="total">총 인원수</label>
+        <div class="stepper">
+          <button type="button" data-target="total" data-step="-1">−</button>
+          <input id="total" type="number" min="1" max="200" value="25">
+          <button type="button" data-target="total" data-step="1">+</button>
+        </div>
+      </div>
+      <div>
+        <label for="count">발표 인원</label>
+        <div class="stepper">
+          <button type="button" data-target="count" data-step="-1">−</button>
+          <input id="count" type="number" min="1" max="200" value="1">
+          <button type="button" data-target="count" data-step="1">+</button>
+        </div>
+      </div>
+    </div>
+    <label class="option">
+      <input id="noRepeat" type="checkbox" checked>
+      이미 발표한 학생은 다시 뽑지 않기
+    </label>
+    <div class="actions">
+      <button id="drawBtn" class="btn btn-primary">뽑기!</button>
+      <button id="resetBtn" class="btn btn-secondary">초기화</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="result" class="result">
+      <span class="placeholder">‘뽑기!’ 버튼을 눌러주세요</span>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="grid-title">
+      <h2>번호 현황</h2>
+      <span id="remain" class="status" style="margin:0"></span>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div class="hint">번호를 누르면 발표 완료/결석 등으로 직접 표시하거나 해제할 수 있어요.</div>
+  </div>
+</div>
+
+<script>
+  const totalInput = document.getElementById('total');
+  const countInput = document.getElementById('count');
+  const noRepeat = document.getElementById('noRepeat');
+  const drawBtn = document.getElementById('drawBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const resultEl = document.getElementById('result');
+  const statusEl = document.getElementById('status');
+  const gridEl = document.getElementById('grid');
+  const remainEl = document.getElementById('remain');
+
+  const STORAGE_KEY = 'presenter-picker-v1';
+  let done = new Set();     // 이미 발표했거나 제외된 번호
+  let current = [];         // 방금 뽑힌 번호
+  let drawing = false;
+
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      if (s.total) totalInput.value = s.total;
+      if (s.count) countInput.value = s.count;
+      if (typeof s.noRepeat === 'boolean') noRepeat.checked = s.noRepeat;
+      if (Array.isArray(s.done)) done = new Set(s.done);
+    } catch (e) {}
+  }
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        total: getTotal(), count: getCount(), noRepeat: noRepeat.checked, done: [...done]
+      }));
+    } catch (e) {}
+  }
+
+  function clampInt(v, min, max, fallback) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) return fallback;
+    return Math.min(max, Math.max(min, v));
+  }
+  function getTotal() { return clampInt(totalInput.value, 1, 200, 25); }
+  function getCount() { return clampInt(countInput.value, 1, 200, 1); }
+
+  function pool() {
+    const total = getTotal();
+    const list = [];
+    for (let i = 1; i <= total; i++) {
+      if (!noRepeat.checked || !done.has(i)) list.push(i);
+    }
+    return list;
+  }
+
+  function randInt(n) {
+    if (window.crypto && crypto.getRandomValues) {
+      const a = new Uint32Array(1);
+      crypto.getRandomValues(a);
+      return a[0] % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+
+  function pickRandom(list, k) {
+    const arr = list.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = randInt(i + 1);
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, k).sort((a, b) => a - b);
+  }
+
+  function renderGrid() {
+    const total = getTotal();
+    // 범위를 벗어난 번호 정리
+    done.forEach(n => { if (n > total) done.delete(n); });
+    gridEl.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+      const d = document.createElement('div');
+      d.className = 'seat';
+      if (done.has(i)) d.classList.add('done');
+      if (current.includes(i)) d.classList.add('now');
+      d.textContent = i;
+      d.addEventListener('click', () => {
+        if (drawing) return;
+        done.has(i) ? done.delete(i) : done.add(i);
+        save(); renderGrid(); updateState();
+      });
+      gridEl.appendChild(d);
+    }
+  }
+
+  function updateState() {
+    const available = pool().length;
+    const total = getTotal();
+    remainEl.textContent = noRepeat.checked
+      ? `남은 학생 ${available}명 / ${total}명`
+      : `전체 ${total}명`;
+    drawBtn.disabled = drawing || available === 0;
+    if (!drawing && available === 0) {
+      statusEl.textContent = '모든 학생이 발표했어요! ‘초기화’를 눌러 다시 시작하세요.';
+    }
+  }
+
+  function makeBall(num, rolling) {
+    const b = document.createElement('div');
+    b.className = 'ball' + (rolling ? ' rolling' : ' pop');
+    b.innerHTML = `${num}<small>번</small>`;
+    return b;
+  }
+
+  function draw() {
+    if (drawing) return;
+    const list = pool();
+    if (list.length === 0) return updateState();
+
+    let k = getCount();
+    let note = '';
+    if (k > list.length) {
+      note = ` (남은 인원이 ${list.length}명이라 ${list.length}명만 뽑았어요)`;
+      k = list.length;
+    }
+    const winners = pickRandom(list, k);
+
+    drawing = true;
+    current = [];
+    renderGrid();
+    updateState();
+    statusEl.textContent = '두구두구두구...';
+
+    resultEl.innerHTML = '';
+    const balls = winners.map(() => {
+      const b = makeBall('?', true);
+      resultEl.appendChild(b);
+      return b;
+    });
+
+    const start = performance.now();
+    const duration = 1600;
+    const tick = () => {
+      const t = performance.now() - start;
+      if (t < duration) {
+        balls.forEach(b => { b.firstChild.textContent = list[randInt(list.length)]; });
+        setTimeout(tick, 40 + (t / duration) * 140);
+        return;
+      }
+      resultEl.innerHTML = '';
+      winners.forEach((n, i) => {
+        setTimeout(() => resultEl.appendChild(makeBall(n, false)), i * 150);
+      });
+      winners.forEach(n => done.add(n));
+      current = winners;
+      drawing = false;
+      save(); renderGrid(); updateState();
+      statusEl.textContent = `🎉 ${winners.join(', ')}번 학생 발표해 주세요!` + note;
+    };
+    tick();
+  }
+
+  function reset() {
+    if (drawing) return;
+    if (done.size && !confirm('발표 기록을 모두 지우고 처음부터 시작할까요?')) return;
+    done.clear();
+    current = [];
+    resultEl.innerHTML = '<span class="placeholder">‘뽑기!’ 버튼을 눌러주세요</span>';
+    statusEl.textContent = '';
+    save(); renderGrid(); updateState();
+  }
+
+  document.querySelectorAll('.stepper button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const max = btn.dataset.target === 'count' ? getTotal() : 200;
+      input.value = clampInt((parseInt(input.value, 10) || 0) + Number(btn.dataset.step), 1, max, 1);
+      input.dispatchEvent(new Event('change'));
+    });
+  });
+
+  totalInput.addEventListener('change', () => {
+    totalInput.value = getTotal();
+    if (getCount() > getTotal()) countInput.value = getTotal();
+    current = current.filter(n => n <= getTotal());
+    save(); renderGrid(); updateState();
+  });
+  countInput.addEventListener('change', () => {
+    countInput.value = Math.min(getCount(), getTotal());
+    save(); updateState();
+  });
+  noRepeat.addEventListener('change', () => { save(); updateState(); });
+  drawBtn.addEventListener('click', draw);
+  resetBtn.addEventListener('click', reset);
+  document.addEventListener('keydown', e => {
+    if ((e.code === 'Space' || e.code === 'Enter') && e.target.tagName !== 'INPUT') {
+      e.preventDefault(); draw();
+    }
+  });
+
+  load();
+  renderGrid();
+  updateState();
+</script>
+</body>
+</html>
