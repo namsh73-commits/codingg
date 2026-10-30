@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>표정 감지 안심케어</title>
+<style>
+  :root {
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --accent: #16a36a;
+    --accent-soft: #e5f4ec;
+    --row: #f1f5fa;
+    --bg: #e9edf2;
+    --paper: #ffffff;
+
+    /* MakeCode 블록 색 */
+    --husky: #12bb18;
+    --basic: #1e90ff;
+    --input: #c724b1;
+    --logic: #00a4a6;
+    --var: #dc143c;
+    --music: #e63022;
+    --led: #5c2d91;
+    --radio: #e3008c;
+    --func: #3455db;
+
+    /* 자연어 태그 색 */
+    --t-prep: #7b8798;
+    --t-loop: #10a810;
+    --t-in: #1e90ff;
+    --t-if: #00a4a6;
+    --t-save: #dc143c;
+    --t-out: #f07020;
+    --t-call: #3455db;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    overflow: hidden;
+  }
+
+  /* ---------- 무대: 1280×720 고정 후 화면에 맞게 확대/축소 ---------- */
+  .stage {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 1280px; height: 720px;
+    transform-origin: center center;
+  }
+
+  .slide {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.12);
+    padding: 44px 56px 40px;
+    display: none;
+    flex-direction: column;
+  }
+  .slide.active { display: flex; }
+
+  .slide h1 {
+    margin: 0 0 6px;
+    font-size: 34px;
+    letter-spacing: -0.5px;
+  }
+  .slide .sub {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  .step {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    width: max-content;
+  }
+
+  .cols { display: flex; gap: 32px; flex: 1; min-height: 0; }
+  .card {
+    background: var(--accent-soft);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .card h3 { margin: 0 0 10px; color: var(--accent); font-size: 20px; }
+  .card ul { margin: 0; padding-left: 20px; line-height: 1.6; font-size: 17px; }
+  .card li + li { margin-top: 6px; }
+  .note { color: var(--muted); font-style: italic; font-size: 14px; margin-top: 12px; line-height: 1.6; }
+
+  /* ---------- 표지 ---------- */
+  .cover {
+    justify-content: center;
+    background: linear-gradient(135deg, #e5f4ec 0%, #ffffff 55%, #eef5ff 100%);
+  }
+  .cover .kicker { color: var(--accent); font-weight: 700; font-size: 20px; margin-bottom: 14px; }
+  .cover h1 { font-size: 54px; line-height: 1.2; margin-bottom: 18px; }
+  .cover .flow { display: flex; gap: 12px; align-items: center; margin-top: 30px; font-size: 20px; font-weight: 700; }
+  .cover .flow span.pill { background: #fff; border: 2px solid var(--accent); color: var(--accent); padding: 8px 18px; border-radius: 999px; }
+  .cover .flow span.arrow { color: var(--muted); }
+  .cover .meta { margin-top: 40px; color: var(--muted); font-size: 17px; }
+
+  /* ---------- 문제 상황 ---------- */
+  .scene {
+    flex: 1.15;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .bubble {
+    background: var(--row);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  .bubble b { color: var(--var); }
+  .q {
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* ---------- 입력-처리-출력 ---------- */
+  .ipo { display: flex; align-items: stretch; gap: 14px; margin-bottom: 22px; }
+  .ipo .box {
+    flex: 1;
+    border-radius: 12px;
+    padding: 16px 18px;
+    color: #fff;
+  }
+  .ipo .box h4 { margin: 0 0 8px; font-size: 20px; }
+  .ipo .box p { margin: 0; font-size: 16px; line-height: 1.55; }
+  .ipo .arr { align-self: center; font-size: 30px; color: var(--muted); }
+
+  table.emo { border-collapse: collapse; font-size: 16px; width: 100%; }
+  table.emo th, table.emo td { padding: 8px 12px; text-align: left; }
+  table.emo th { background: var(--accent); color: #fff; }
+  table.emo tr:nth-child(even) td { background: var(--row); }
+
+  /* ---------- 타이머 ---------- */
+  .timeline {
+    position: relative;
+    height: 150px;
+    margin: 10px 10px 18px;
+  }
+  .timeline .axis {
+    position: absolute; left: 0; right: 0; top: 70px;
+    height: 4px; background: #cbd5e1; border-radius: 2px;
+  }
+  .timeline .seg {
+    position: absolute; top: 58px; height: 28px; border-radius: 6px;
+    color: #fff; font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .timeline .mark {
+    position: absolute; top: 0; width: 2px; height: 130px; background: var(--ink);
+  }
+  .timeline .mark span {
+    position: absolute; top: -4px; left: 6px; white-space: nowrap;
+    font-size: 14px; font-weight: 700;
+  }
+  .timeline .mark em {
+    position: absolute; top: 104px; left: 6px; white-space: nowrap;
+    font-size: 13px; color: var(--muted); font-style: normal;
+  }
+  .formula {
+    font-size: 22px; font-weight: 700; text-align: center;
+    background: var(--row); border-radius: 12px; padding: 14px;
+    margin-bottom: 16px;
+  }
+  .formula .v { color: var(--var); }
+
+  /* ---------- 자연어 알고리즘 ---------- */
+  .algo { flex: 1.9; display: flex; flex-direction: column; gap: 2px; }
+  .algo .grp {
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    margin: 6px 0 1px; padding-left: 4px;
+  }
+  .algo .grp:first-child { margin-top: 0; }
+  .algo .ln {
+    display: flex; align-items: center;
+    font-size: 16px; min-height: 26px;
+    padding: 2px 0;
+  }
+  .algo .ln:nth-of-type(odd) { background: var(--row); }
+  .algo .no { width: 34px; color: #94a3b8; font-size: 13px; padding-left: 8px; flex: none; }
+  .algo .tag {
+    flex: none;
+    width: 62px; text-align: center;
+    color: #fff; font-size: 12px; font-weight: 700;
+    padding: 3px 0; margin-right: 10px; border-radius: 2px;
+  }
+  .algo .i1 { margin-left: 46px; }
+  .algo .i2 { margin-left: 92px; }
+  .algo .i3 { margin-left: 138px; }
+
+  .tg-prep { background: var(--t-prep); }
+  .tg-loop { background: var(--t-loop); }
+  .tg-in   { background: var(--t-in); }
+  .tg-if   { background: var(--t-if); }
+  .tg-save { background: var(--t-save); }
+  .tg-out  { background: var(--t-out); }
+  .tg-call { background: var(--t-call); }
+
+  /* ---------- MakeCode 블록 ---------- */
+  .legend { display: flex; gap: 18px; justify-content: flex-end; font-size: 13px; color: #374151; margin-top: -40px; margin-bottom: 14px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 16px; height: 16px; border-radius: 3px; display: inline-block; }
+
+  .code { display: flex; gap: 36px; align-items: flex-start; flex: 1; min-height: 0; }
+  .code .left { display: flex; flex-direction: column; gap: 22px; }
+
+  .b {
+    color: #fff; font-weight: 700; font-size: 14px;
+    padding: 5px 12px; border-radius: 5px;
+    width: max-content; white-space: nowrap;
+    background: var(--c);
+  }
+  .c { display: flex; flex-direction: column; --c: var(--basic); }
+  .c > .hd, .c > .mid {
+    background: var(--c); color: #fff; font-weight: 700; font-size: 14px;
+    padding: 5px 12px; border-radius: 5px 5px 5px 0;
+    width: max-content; white-space: nowrap;
+  }
+  .c > .mid { border-radius: 0 5px 5px 0; }
+  .c > .body {
+    border-left: 22px solid var(--c);
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 3px 0;
+  }
+  .c > .ft {
+    background: var(--c);
+    width: 120px; height: 12px;
+    border-radius: 0 0 5px 5px;
+  }
+  .hat > .hd { border-radius: 12px 12px 5px 0; padding-top: 8px; }
+
+  .r {
+    display: inline-block;
+    background: var(--husky);
+    border-radius: 10px;
+    padding: 1px 7px; margin: 0 3px;
+    font-size: 13px;
+  }
+  .r.v { background: #ef4b6b; }
+  .r.k { background: #b7bec9; color: #1f2937; }
+  .r.fn { background: var(--func); }
+
+  .k-husky { --c: var(--husky); }
+  .k-basic { --c: var(--basic); }
+  .k-logic { --c: var(--logic); }
+  .k-var   { --c: var(--var); }
+  .k-music { --c: var(--music); }
+  .k-led   { --c: var(--led); }
+  .k-radio { --c: var(--radio); }
+  .k-func  { --c: var(--func); }
+
+  .side-notes { font-size: 14px; color: var(--muted); font-style: italic; line-height: 1.7; }
+
+  /* ---------- 하단 ---------- */
+  .foot {
+    position: absolute; bottom: 14px; right: 24px;
+    font-size: 13px; color: #9ca3af;
+  }
+
+  .nav {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; align-items: center;
+    background: rgba(31,41,55,.82); color: #fff;
+    padding: 6px 10px; border-radius: 999px;
+    font-size: 14px; z-index: 10;
+  }
+  .nav button {
+    background: transparent; border: 0; color: #fff;
+    font-size: 18px; cursor: pointer; padding: 2px 10px; border-radius: 999px;
+  }
+  .nav button:hover { background: rgba(255,255,255,.15); }
+
+  @media print {
+    body { overflow: visible; background: #fff; }
+    .nav { display: none; }
+    .stage { position: static; transform: none !important; }
+    .slide { position: relative; display: flex !important; box-shadow: none; border-radius: 0; page-break-after: always; width: 1280px; height: 720px; }
+  }
+  @page { size: 1280px 720px; margin: 0; }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <!-- 1. 표지 -->
+  <section class="slide cover active">
+    <div class="kicker">micro:bit × HUSKYLENS 2 · AI 표정 인식</div>
+    <h1>AI 표정 감지로 만드는<br>독거노인 안심케어</h1>
+    <div style="font-size:20px;color:#374151;">슬픈 표정이 오래 이어지거나 얼굴이 한동안 보이지 않으면 보호자에게 알려요</div>
+    <div class="flow">
+      <span class="pill">① 문제 상황</span><span class="arrow">→</span>
+      <span class="pill">② 자연어 묶음</span><span class="arrow">→</span>
+      <span class="pill">③ 블록 + 타이머</span>
+    </div>
+    <div class="meta">준비물: micro:bit 2대(어르신용·보호자용), HUSKYLENS 2, 확장 보드 · MakeCode</div>
+  </section>
+
+  <!-- 2. 문제 상황 -->
+  <section class="slide">
+    <span class="step">① 문제 상황</span>
+    <h1>혼자 계신 할머니, 오늘은 괜찮으실까?</h1>
+    <div class="sub">문제를 구체적인 장면으로 바꿔 봅시다</div>
+    <div class="cols">
+      <div class="scene">
+        <div class="bubble">
+          김 할머니는 혼자 사십니다. 멀리 사는 손녀는 매일 전화를 드리지만,
+          할머니는 <b>“괜찮다”</b>고만 하십니다.
+        </div>
+        <div class="bubble">
+          그런데 요즘 할머니가 거실에 앉아 <b>오랫동안 슬픈 표정</b>으로 계시거나,
+          <b>하루 종일 거실에 나오지 않는</b> 날이 있다고 합니다.
+        </div>
+        <div class="bubble">
+          손녀가 매 순간 지켜볼 수는 없습니다. 하지만 <b>표정과 움직임의 변화</b>를
+          알 수 있다면 더 빨리 연락하거나 찾아갈 수 있습니다.
+        </div>
+        <div class="q">❓ 카메라가 표정을 보고, 일정 시간 이상 이상한 상태가 이어질 때만 알려 줄 수 있을까?</div>
+      </div>
+      <div class="card" style="flex:1;">
+        <h3>문제 분해하기</h3>
+        <ul>
+          <li><b>무엇을 감지?</b><br>얼굴이 보이는지, 어떤 표정인지</li>
+          <li><b>언제 알릴까?</b><br>슬픈 표정이 <u>잠깐</u>이 아니라 <u>계속</u>될 때<br>얼굴이 <u>오랫동안</u> 보이지 않을 때</li>
+          <li><b>누구에게 알릴까?</b><br>보호자 micro:bit로 라디오 전송</li>
+          <li><b>필요한 도구</b><br>“얼마나 오래?” → <b>타이머</b></li>
+        </ul>
+        <div class="note">※ 개인정보 보호: 영상은 저장하지 않고 표정 결과(번호)만 사용합니다.</div>
+      </div>
+    </div>
+    <div class="foot">2</div>
+  </section>
+
+  <!-- 3. 해결 아이디어 -->
+  <section class="slide">
+    <span class="step">① 문제 상황 → 해결 아이디어</span>
+    <h1>입력 → 처리 → 출력으로 정리하기</h1>
+    <div class="sub">허스키렌즈2의 “표정 인식(Emotion Recognition)” 기능을 사용합니다</div>
+    <div class="ipo">
+      <div class="box" style="background:var(--husky)">
+        <h4>입력</h4>
+        <p>허스키렌즈2가 얼굴을 찾고<br>표정 번호(ID)를 알려 줌</p>
+      </div>
+      <div class="arr">→</div>
+      <div class="box" style="background:var(--logic)">
+        <h4>처리 (판단 + 타이머)</h4>
+        <p>슬픈 표정이 몇 초째인지 계산<br>얼굴이 안 보인 지 몇 초째인지 계산</p>
+      </div>
+      <div class="arr">→</div>
+      <div class="box" style="background:var(--radio)">
+        <h4>출력</h4>
+        <p>LED 아이콘·소리<br>보호자에게 라디오 “SAD” / “CHECK”</p>
+      </div>
+    </div>
+    <div class="cols">
+      <div style="flex:1.2">
+        <table class="emo">
+          <tr><th>상황</th><th>바로 알릴까?</th><th>타이머 조건</th><th>출력</th></tr>
+          <tr><td>웃음 · 보통 표정</td><td>아니요</td><td>슬픔 타이머 리셋</td><td>웃는 얼굴</td></tr>
+          <tr><td>슬픈 표정 (잠깐)</td><td>아니요</td><td>10초 미만</td><td>—</td></tr>
+          <tr><td>슬픈 표정 (계속)</td><td><b>예</b></td><td>10초 이상</td><td>슬픈 얼굴 · 소리 · “SAD”</td></tr>
+          <tr><td>얼굴 안 보임 (계속)</td><td><b>예</b></td><td>30초 이상</td><td>“?” · “CHECK”</td></tr>
+        </table>
+      </div>
+      <div class="card" style="flex:.8">
+        <h3>왜 타이머가 필요할까?</h3>
+        <ul>
+          <li>사람은 잠깐 찡그리거나 고개를 돌리기도 합니다.</li>
+          <li>순간 표정만 보고 알리면 <b>잘못된 알림</b>이 너무 많아집니다.</li>
+          <li>“<b>얼마나 오래</b> 계속되었나”를 재면 더 믿을 수 있는 알림이 됩니다.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot">3</div>
+  </section>
+
+  <!-- 4. 타이머 원리 -->
+  <section class="slide">
+    <span class="step">② 자연어 묶음 준비 · 타이머 원리</span>
+    <h1>MakeCode 타이머: “시작 시각”을 기억하기</h1>
+    <div class="sub">「실행 시간(ms)」은 micro:bit가 켜진 뒤 흐른 시간입니다 (1초 = 1000ms)</div>
+    <div class="formula">
+      경과 시간 = <span class="v">실행 시간(ms)</span> − <span class="v">슬픔시작</span>
+      &nbsp;&nbsp;→&nbsp;&nbsp; 10000보다 크면 알림
+    </div>
+    <div class="timeline">
+      <div class="axis"></div>
+      <div class="seg" style="left:6%;width:16%;background:var(--husky)">보통 표정</div>
+      <div class="seg" style="left:22%;width:9%;background:#f59e0b">슬픔</div>
+      <div class="seg" style="left:31%;width:10%;background:var(--husky)">보통</div>
+      <div class="seg" style="left:41%;width:46%;background:var(--var)">슬픈 표정 계속 ……</div>
+      <div class="mark" style="left:22%"><span>슬픔시작 = 실행시간</span><em>4초 만에 끝 → 리셋(0)</em></div>
+      <div class="mark" style="left:41%"><span>슬픔시작 = 실행시간</span><em>다시 타이머 시작</em></div>
+      <div class="mark" style="left:73%;background:var(--var)"><span style="color:var(--var)">경과 &gt; 10초 → 알림!</span><em>“SAD” 전송</em></div>
+    </div>
+    <div class="cols">
+      <div class="card" style="flex:1">
+        <h3>세 가지 규칙만 기억하세요</h3>
+        <ul>
+          <li><b>시작</b> — 슬픔이 처음 보이면(슬픔시작 = 0일 때) 지금 시각을 저장</li>
+          <li><b>계산</b> — 슬픔이 계속되면 <b>지금 − 슬픔시작</b>으로 경과 시간 계산</li>
+          <li><b>리셋</b> — 다른 표정이 나오면 슬픔시작 = 0으로 되돌림</li>
+        </ul>
+      </div>
+      <div class="card" style="flex:1">
+        <h3>같은 방법으로 “부재 타이머”</h3>
+        <ul>
+          <li>얼굴이 보일 때마다 <b>마지막확인 = 지금 시각</b></li>
+          <li>얼굴이 안 보이면 <b>지금 − 마지막확인</b>이 30초를 넘는지 확인</li>
+          <li>수업에서는 10초·30초, 실제로는 수십 분~몇 시간으로 늘려요</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot">4</div>
+  </section>
+
+  <!-- 5. 자연어 묶음 -->
+  <section class="slide">
+    <span class="step">② 자연어 묶음</span>
+    <h1>자연어 알고리즘을 4개의 묶음으로</h1>
+    <div class="cols" style="margin-top:10px;">
+      <div class="algo">
+        <div class="grp">묶음 ① 준비 — 시작하면</div>
+        <div class="ln"><span class="no">01</span><span class="tag tg-prep">준비</span>I2C 시작, “표정 인식” 선택, 라디오 그룹 1</div>
+        <div class="ln"><span class="no">02</span><span class="tag tg-save">저장</span>슬픔시작 = 0, 마지막확인 = 지금 시각</div>
+
+        <div class="grp">묶음 ② 반복 — 무한반복 실행</div>
+        <div class="ln"><span class="no">03</span><span class="tag tg-loop">반복</span>계속 반복한다</div>
+        <div class="ln"><span class="no">04</span><span class="tag tg-in i1">입력</span>표정 인식 결과를 가져온다</div>
+        <div class="ln"><span class="no">05</span><span class="tag tg-if i1">판단</span>얼굴이 보이면 → 〔표정 확인〕 묶음 실행</div>
+        <div class="ln"><span class="no">06</span><span class="tag tg-if i1">판단</span>얼굴이 없으면 → 〔부재 확인〕 묶음 실행</div>
+
+        <div class="grp">묶음 ③ 표정 확인 — 슬픔 타이머</div>
+        <div class="ln"><span class="no">07</span><span class="tag tg-save">저장</span>마지막확인 = 지금 시각, e = 가운데 얼굴의 표정 ID</div>
+        <div class="ln"><span class="no">08</span><span class="tag tg-if">판단</span>e가 슬픔이면</div>
+        <div class="ln"><span class="no">09</span><span class="tag tg-save i1">저장</span>슬픔시작이 0이면 슬픔시작 = 지금 시각 (타이머 시작)</div>
+        <div class="ln"><span class="no">10</span><span class="tag tg-if i1">판단</span>지금 − 슬픔시작 &gt; 10초 이면</div>
+        <div class="ln"><span class="no">11</span><span class="tag tg-out i2">출력</span>슬픈 아이콘, 소리, 라디오 “SAD”</div>
+        <div class="ln"><span class="no">12</span><span class="tag tg-save">저장</span>아니면(웃음·보통) 슬픔시작 = 0 (리셋), 웃는 아이콘</div>
+
+        <div class="grp">묶음 ④ 부재 확인 — 부재 타이머</div>
+        <div class="ln"><span class="no">13</span><span class="tag tg-if">판단</span>지금 − 마지막확인 &gt; 30초 이면</div>
+        <div class="ln"><span class="no">14</span><span class="tag tg-out i1">출력</span>“?” 표시, 라디오 “CHECK”</div>
+        <div class="ln"><span class="no">15</span><span class="tag tg-out">출력</span>아니면 LED 지우기</div>
+      </div>
+      <div class="card" style="flex:1;align-self:flex-start;">
+        <h3>핵심 아이디어</h3>
+        <ul>
+          <li>긴 알고리즘은 <b>역할별 묶음</b>으로 나누면 읽기 쉽습니다. 묶음 ③·④는 MakeCode의 <b>함수</b>가 됩니다.</li>
+          <li>슬픔 표정 ID는 먼저 <b>수 출력 e</b>로 직접 확인하세요. 블록의 6은 예시입니다.</li>
+          <li>기준 10초·30초도 예시입니다. 측정 → 기준 정하기 → 판단!</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot">5</div>
+  </section>
+
+  <!-- 6. 블록 ① -->
+  <section class="slide">
+    <span class="step">③ 블록 + 타이머 · 1</span>
+    <h1>MakeCode 블록 ① 준비와 반복</h1>
+    <div class="sub">묶음 ① → 시작하면, 묶음 ② → 무한반복 실행</div>
+    <div class="legend">
+      <span><i style="background:var(--husky)"></i>huskylens2</span>
+      <span><i style="background:var(--basic)"></i>기본</span>
+      <span><i style="background:var(--logic)"></i>논리</span>
+      <span><i style="background:var(--var)"></i>변수</span>
+      <span><i style="background:var(--radio)"></i>라디오</span>
+      <span><i style="background:var(--func)"></i>함수</span>
+    </div>
+    <div class="code">
+      <div class="left">
+        <div class="c hat k-basic">
+          <div class="hd">시작하면</div>
+          <div class="body">
+            <div class="b k-husky">initialize I2C until success</div>
+            <div class="b k-husky">switch algorithm&nbsp; emotion recognition</div>
+            <div class="b k-radio">라디오 그룹을 1 로 설정</div>
+            <div class="b k-var"><span class="r v">슬픔시작</span> 에 0 저장</div>
+            <div class="b k-var"><span class="r v">마지막확인</span> 에 <span class="r k">실행 시간(ms)</span> 저장</div>
+          </div>
+          <div class="ft"></div>
+        </div>
+        <div class="side-notes">
+          ※ 1단계: <b>수 출력 e</b>로 표정마다 ID를 확인<br>
+          ※ <b>실행 시간(ms)</b>은 ‘입력’ 메뉴 아래쪽에 있어요<br>
+          ※ 마지막확인을 지금 시각으로 시작해야<br>&nbsp;&nbsp;&nbsp;&nbsp;켜자마자 “CHECK”가 나가지 않아요
+        </div>
+      </div>
+
+      <div class="c hat k-basic">
+        <div class="hd">무한반복 실행</div>
+        <div class="body">
+          <div class="b k-husky">get emotion recognition result</div>
+          <div class="c k-logic">
+            <div class="hd">만약 <span class="r">available emotion recognition</span> 이면</div>
+            <div class="body">
+              <div class="b k-func">함수 호출 <span class="r fn">표정확인</span></div>
+            </div>
+            <div class="mid">아니면</div>
+            <div class="body">
+              <div class="b k-func">함수 호출 <span class="r fn">부재확인</span></div>
+            </div>
+            <div class="ft"></div>
+          </div>
+          <div class="b k-basic">일시중지 200 (ms)</div>
+        </div>
+        <div class="ft"></div>
+      </div>
+
+      <div class="card" style="flex:1;align-self:stretch;">
+        <h3>묶음 → 함수</h3>
+        <ul>
+          <li>무한반복 안이 짧아져서 <b>전체 흐름</b>이 한눈에 보여요.</li>
+          <li>함수는 ‘고급 → 함수 → 함수 만들기’에서 만들어요.</li>
+          <li>200ms 쉬기: 허스키렌즈가 결과를 갱신할 시간을 줍니다.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot">6</div>
+  </section>
+
+  <!-- 7. 블록 ② -->
+  <section class="slide">
+    <span class="step">③ 블록 + 타이머 · 2</span>
+    <h1>MakeCode 블록 ② 두 개의 타이머 함수</h1>
+    <div class="sub">묶음 ③ → 함수 표정확인 (슬픔 타이머), 묶음 ④ → 함수 부재확인 (부재 타이머)</div>
+    <div class="legend">
+      <span><i style="background:var(--husky)"></i>huskylens2</span>
+      <span><i style="background:var(--basic)"></i>기본</span>
+      <span><i style="background:var(--logic)"></i>논리</span>
+      <span><i style="background:var(--var)"></i>변수</span>
+      <span><i style="background:var(--music)"></i>음악</span>
+      <span><i style="background:var(--radio)"></i>라디오</span>
+    </div>
+    <div class="code" style="gap:44px;">
+      <div class="c hat k-func">
+        <div class="hd">함수 표정확인</div>
+        <div class="body">
+          <div class="b k-var"><span class="r v">마지막확인</span> 에 <span class="r k">실행 시간(ms)</span> 저장</div>
+          <div class="b k-var"><span class="r v">e</span> 에 <span class="r">emotion nearest to center ID</span> 저장</div>
+          <div class="c k-logic">
+            <div class="hd">만약 <span class="r v">e</span> = 6 이면</div>
+            <div class="body">
+              <div class="c k-logic">
+                <div class="hd">만약 <span class="r v">슬픔시작</span> = 0 이면</div>
+                <div class="body">
+                  <div class="b k-var"><span class="r v">슬픔시작</span> 에 <span class="r k">실행 시간(ms)</span> 저장</div>
+                </div>
+                <div class="ft"></div>
+              </div>
+              <div class="c k-logic">
+                <div class="hd">만약 <span class="r k">실행 시간(ms)</span> − <span class="r v">슬픔시작</span> &gt; 10000 이면</div>
+                <div class="body">
+                  <div class="b k-basic">아이콘 출력&nbsp; Sad</div>
+                  <div class="b k-music">멜로디 재생&nbsp; power down</div>
+                  <div class="b k-radio">라디오 전송: 문자열 "SAD"</div>
+                </div>
+                <div class="ft"></div>
+              </div>
+            </div>
+            <div class="mid">아니면</div>
+            <div class="body">
+              <div class="b k-var"><span class="r v">슬픔시작</span> 에 0 저장</div>
+              <div class="b k-basic">아이콘 출력&nbsp; Happy</div>
+            </div>
+            <div class="ft"></div>
+          </div>
+        </div>
+        <div class="ft"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:22px;">
+        <div class="c hat k-func">
+          <div class="hd">함수 부재확인</div>
+          <div class="body">
+            <div class="c k-logic">
+              <div class="hd">만약 <span class="r k">실행 시간(ms)</span> − <span class="r v">마지막확인</span> &gt; 30000 이면</div>
+              <div class="body">
+                <div class="b k-basic">문자열 출력 "?"</div>
+                <div class="b k-radio">라디오 전송: 문자열 "CHECK"</div>
+              </div>
+              <div class="mid">아니면</div>
+              <div class="body">
+                <div class="b k-basic">LED 스크린 지우기</div>
+              </div>
+              <div class="ft"></div>
+            </div>
+          </div>
+          <div class="ft"></div>
+        </div>
+        <div class="side-notes">
+          ※ 6은 예시 ID — 내 허스키렌즈2에서 슬픈 표정의 ID로 바꾸세요<br>
+          ※ 10000ms = 10초, 30000ms = 30초 (수업용 기준값)<br>
+          ※ 다른 표정이 나오면 슬픔시작 = 0 → 타이머 리셋<br>
+          ※ 알림이 계속 반복되면? 알림 후 슬픔시작 = 0 으로 바꿔 보기
+        </div>
+      </div>
+    </div>
+    <div class="foot">7</div>
+  </section>
+
+  <!-- 8. 보호자 + 테스트 -->
+  <section class="slide">
+    <span class="step">③ 블록 + 타이머 · 3</span>
+    <h1>보호자 micro:bit와 테스트 계획</h1>
+    <div class="sub">두 번째 micro:bit는 라디오로 받은 문자열에 따라 알려 줍니다</div>
+    <div class="code" style="gap:44px;">
+      <div class="c hat k-radio">
+        <div class="hd">라디오 수신하면 <span class="r v">receivedString</span></div>
+        <div class="body">
+          <div class="c k-logic">
+            <div class="hd">만약 <span class="r v">receivedString</span> = "SAD" 이면</div>
+            <div class="body">
+              <div class="b k-basic">아이콘 출력&nbsp; Sad</div>
+              <div class="b k-music">멜로디 재생&nbsp; ba ding</div>
+            </div>
+            <div class="mid">아니면서 만약 <span class="r v">receivedString</span> = "CHECK" 이면</div>
+            <div class="body">
+              <div class="b k-basic">문자열 출력 "?"</div>
+              <div class="b k-music">음 재생&nbsp; 중간 C 1 박자</div>
+            </div>
+            <div class="ft"></div>
+          </div>
+        </div>
+        <div class="ft"></div>
+        <div class="side-notes" style="margin-top:14px;">※ 두 micro:bit의 라디오 그룹 번호를 같게(1) 맞추세요</div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>테스트 체크리스트</h3>
+        <ul>
+          <li>☐ 웃는 얼굴 → 웃는 아이콘, 알림 없음</li>
+          <li>☐ 슬픈 표정 5초 → 다시 웃기 → 알림 없음 (타이머 리셋 확인)</li>
+          <li>☐ 슬픈 표정 10초 이상 → 보호자 쪽 Sad + 소리</li>
+          <li>☐ 카메라 앞에서 30초 이상 사라지기 → 보호자 쪽 “?”</li>
+          <li>☐ 다시 나타나면 → “CHECK” 멈춤</li>
+        </ul>
+        <h3 style="margin-top:18px;">더 생각해 보기</h3>
+        <ul>
+          <li>슬픔 말고 화남·놀람도 함께 감지하려면?</li>
+          <li>밤 시간에는 부재 알림을 끄려면 무엇이 더 필요할까?</li>
+          <li>카메라만 믿어도 될까? 버튼 “괜찮아요” 응답을 더한다면?</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot">8</div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button id="prev" aria-label="이전">‹</button>
+  <span id="count">1 / 8</span>
+  <button id="next" aria-label="다음">›</button>
+</div>
+
+<script>
+  const stage = document.getElementById('stage');
+  const slides = [...document.querySelectorAll('.slide')];
+  const count = document.getElementById('count');
+  let cur = 0;
+
+  function fit() {
+    const s = Math.min(window.innerWidth / 1320, (window.innerHeight - 50) / 760);
+    stage.style.transform = `translate(-50%, calc(-50% - 18px)) scale(${s})`;
+  }
+
+  function show(i) {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((el, k) => el.classList.toggle('active', k === cur));
+    count.textContent = `${cur + 1} / ${slides.length}`;
+  }
+
+  document.getElementById('prev').onclick = () => show(cur - 1);
+  document.getElementById('next').onclick = () => show(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(cur - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+  });
+
+  let touchX = null;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) show(cur + (dx < 0 ? 1 : -1));
+    touchX = null;
+  });
+
+  window.addEventListener('resize', fit);
+  fit();
+  show(0);
+</script>
+</body>
+</html>
